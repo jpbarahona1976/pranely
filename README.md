@@ -4,7 +4,7 @@
 
 ## Estado
 
-**Subfase:** 0A - Baseline vacío post-cuarentena
+**Subfase:** 0A - Baseline corregido post-auditoría  
 **Fecha:** 20 Abril 2026
 
 ## Stack Tecnológico
@@ -22,18 +22,23 @@
 
 ```
 pranely/
+├── .devcontainer/            # Dev Container configuration
+├── .github/workflows/       # GitHub Actions CI
+├── docs/
+│   ├── BASELINE.md          # Acta de baseline
+│   └── decisions/           # Architecture Decision Records
 ├── packages/
-│   ├── frontend/      # Next.js frontend
-│   └── backend/       # FastAPI backend
-├── infra/
-│   ├── docker/       # Docker configurations
-│   └── nginx/        # Nginx configurations
-├── scripts/          # Utility scripts
-├── docs/             # Documentación
-├── tests/            # Tests
-├── .devcontainer/    # Dev Container
-├── docker-compose.base.yml   # Servicios base (PG + Redis)
-└── docker-compose.dev.yml    # Desarrollo completo
+│   ├── frontend/            # Next.js frontend
+│   └── backend/             # FastAPI backend
+├── quarantine/              # Contenido en cuarentena
+├── scripts/                 # Utility scripts
+├── docker-compose.base.yml  # Servicios base (PG + Redis)
+├── docker-compose.dev.yml   # Desarrollo completo
+├── .gitignore
+├── .nvmrc
+├── .python-version
+├── LICENSE
+└── README.md
 ```
 
 ## Quick Start
@@ -50,22 +55,12 @@ docker compose -f docker-compose.base.yml up -d
 # Abrir en VS Code Dev Container
 code .
 # → Reopen in Container
-
-# O usar GitHub Codespaces
-# → New Codespace
 ```
 
 ## Documentación
 
 - [docs/BASELINE.md](./docs/BASELINE.md) - Acta de baseline
 - [docs/decisions/](./docs/decisions/) - Architecture Decision Records
-
-## Cuarentena
-
-El contenido anterior fue puesto en cuarentena:
-`Pranely__QUARANTINE__2026-04-20_ONEDRIVE`
-
-Ver archivo de evidencia para detalles.
 
 ---
 

@@ -18,21 +18,21 @@ services:
       service: redis
 
   # -----------------------------------------------------------------------------
-  # Web - Next.js Frontend
+  # Frontend - Next.js
   # -----------------------------------------------------------------------------
-  web:
+  frontend:
     build:
-      context: ./apps/web
+      context: ./packages/frontend
       dockerfile: Dockerfile
-    container_name: pranely-web
+    container_name: pranely-frontend
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://api:8000
+      NEXT_PUBLIC_API_URL: http://backend:8000
     volumes:
-      - ./apps/web:/app
+      - ./packages/frontend:/app
       - /app/node_modules
       - /app/.next
     depends_on:
@@ -40,19 +40,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      api:
+      backend:
         condition: service_started
     networks:
       - pranely-network
 
   # -----------------------------------------------------------------------------
-  # API - FastAPI Backend
+  # Backend - FastAPI
   # -----------------------------------------------------------------------------
-  api:
+  backend:
     build:
-      context: ./apps/api
+      context: ./packages/backend
       dockerfile: Dockerfile
-    container_name: pranely-api
+    container_name: pranely-backend
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -61,7 +61,7 @@ services:
       REDIS_URL: redis://redis:6379
       ENVIRONMENT: development
     volumes:
-      - ./apps/api:/app
+      - ./packages/backend:/app
       - /app/__pycache__
     depends_on:
       postgres:

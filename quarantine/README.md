@@ -6,7 +6,7 @@ Este directorio contiene contenido en cuarentena removido del proyecto principal
 
 | Fecha | Contenido | Razón |
 |-------|-----------|-------|
-| 2026-04-20 | Pranely__QUARANTINE__2026-04-20_ONEDRIVE | Git corrupto + estructura divergente |
+| 2026-04-20 | Contenido anterior | Git corrupto + estructura divergente |
 
 ## Proceso de Cuarentena
 
