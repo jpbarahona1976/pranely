@@ -42,7 +42,7 @@
       }
     }
   },
-  "postCreateCommand": "bash scripts/dev-init.sh",
+  "postCreateCommand": "echo 'Dev Container listo. Ejecuta: cd packages/frontend && pnpm install'",
   "remoteEnv": {
     "NODE_ENV": "development",
     "PYTHON_ENV": "development"
