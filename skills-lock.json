@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "skills": {
+    "alembic": {
+      "source": "manutej/luxor-claude-marketplace",
+      "sourceType": "github",
+      "computedHash": "e59d670387c99f630a5ae89c2d613f8e4b98a364ff0cb758e53c9899acea6dc3"
+    },
+    "api-designer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "626b896a54e811bf95c1b0dac26021fddc6004f08fd3a747a0d3269c38f96ac0"
+    },
+    "close-all": {
+      "source": "anton-abyzov/specweave",
+      "sourceType": "github",
+      "computedHash": "86e82a4c75639d79cf2bfa0926e95423f8184d36a1a7a7e67790f8c4f94efd7c"
+    },
+    "monitoring-observability": {
+      "source": "ahmedasmar/devops-claude-skills",
+      "sourceType": "github",
+      "computedHash": "d00c9b5effe5d18995acdffdc3438e174628f66fad1fcef80d9a668b4f6e34b3"
+    },
+    "observability-engineer": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "e9259fd5d0129b6b8b29376226fe23216d20be223fa5e400a83f7a9d72edb88e"
+    },
+    "openapi-spec-generation": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "21be7865a354c4d1ede71830d478ec5442bb60305ef4790b0c7de571e8fe182d"
+    },
+    "postgresql-database-engineering": {
+      "source": "manutej/luxor-claude-marketplace",
+      "sourceType": "github",
+      "computedHash": "6039063ea5257f77ff0797f08074d3ec40da34ca8f412d8af5b194b9b6db0e89"
+    },
+    "prd-development": {
+      "source": "deanpeters/product-manager-skills",
+      "sourceType": "github",
+      "computedHash": "1b7f6de0d407c7ed581ab96fcdd332392f4552ddafa26da5fe29eff863123c7f"
+    },
+    "sw/analytics": {
+      "source": "anton-abyzov/specweave",
+      "sourceType": "github",
+      "computedHash": "54b62f63102c54023b9683887e7b6b58caa5e76086b37101a761c46bc3bb57a4"
+    },
+    "sw/github-issue-standard": {
+      "source": "anton-abyzov/specweave",
+      "sourceType": "github",
+      "computedHash": "86ed371ca62f45fd7ca0f43e2bf5f06cea30e2ad47bd6fc45ee0a73f89112ade"
+    },
+    "sw/multi-project": {
+      "source": "anton-abyzov/specweave",
+      "sourceType": "github",
+      "computedHash": "e7c302cf5b63cd1756803fc2b2d79ee5fdb011ff62aacfcadc4d5c261da8d735"
+    },
+    "sw/team-build": {
+      "source": "anton-abyzov/specweave",
+      "sourceType": "github",
+      "computedHash": "4b3b95ce1dfddf29d0673af0cd53545bb6b49b586f8f6b3e656d794667e55a06"
+    }
+  }
+}
