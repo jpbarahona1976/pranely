@@ -1,0 +1,46 @@
+{
+  "name": "PRANELY Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers-contrib/features/python-poetry:1": {}
+  },
+  "forwardPorts": [3000, 8000, 5432, 6379],
+  "portsAttributes": {
+    "3000": {"label": "Next.js", "onAutoForward": "openPreview"},
+    "8000": {"label": "FastAPI", "onAutoForward": "openPreview"},
+    "5432": {"label": "PostgreSQL"},
+    "6379": {"label": "Redis"}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "dbaeumer.vscode-eslint",
+        "github.copilot"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[typescript]": {
+          "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python"
+        },
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      }
+    }
+  },
+  "postCreateCommand": "bash scripts/dev-init.sh",
+  "remoteEnv": {
+    "NODE_ENV": "development"
+  }
+}

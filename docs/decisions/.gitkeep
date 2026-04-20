@@ -1,0 +1,30 @@
+# ADR-0001: Stack Tecnológico
+
+## Meta
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | ADR-0001 |
+| **Fecha** | 20 Abril 2026 |
+| **Status** | Aprobado |
+
+## Decisión
+
+| Capa | Tecnología | Justificación |
+|------|------------|---------------|
+| Frontend | Next.js 15 + TypeScript + Tailwind | App Router, SSR/CSR |
+| Backend | FastAPI + Python 3.12 | Async, Pydantic |
+| Base de datos | PostgreSQL 16 | Multi-tenant, JSONB |
+| Colas | Redis 7 + RQ | Python-native |
+| IA | DeepInfra-Qwen | Costo-efectivo |
+| Pagos | Stripe | Billing completo |
+
+## Alternativas Rechazadas
+
+- **SQLite**: No multi-tenant, no concurrencia
+- **NestJS**: Overhead para MVP
+- **Django**: Menos async-native
+
+---
+
+*ADR creado: 2026-04-20*

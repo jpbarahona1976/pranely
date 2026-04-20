@@ -1,0 +1,68 @@
+# =============================================================================
+# PRANELY - Docker Compose Base
+# Servicios mínimos: PostgreSQL 16 + Redis 7
+# =============================================================================
+
+services:
+  # -----------------------------------------------------------------------------
+  # PostgreSQL 16 - Base de datos principal
+  # -----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: pranely-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pranely
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: pranely_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pranely -d pranely_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pranely-network
+
+  # -----------------------------------------------------------------------------
+  # Redis 7 - Cache y colas
+  # -----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: pranely-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - pranely-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    name: pranely-postgres-data
+  redis_data:
+    name: pranely-redis-data
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-network:
+    name: pranely-network
+    driver: bridge

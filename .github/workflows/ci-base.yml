@@ -1,0 +1,72 @@
+name: PRANELY CI Base
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  structure:
+    name: Validate Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate directory structure
+        run: |
+          required_dirs=(
+            ".devcontainer"
+            ".github/workflows"
+            "docs/decisions"
+            "packages/frontend"
+            "packages/backend"
+          )
+          for dir in "${required_dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "Missing directory: $dir"
+              exit 1
+            fi
+          done
+          echo "✓ Structure validation passed"
+
+  docker-config:
+    name: Docker Compose Config
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate base compose
+        run: docker compose -f docker-compose.base.yml config --quiet
+
+      - name: Validate dev compose
+        run: docker compose -f docker-compose.dev.yml config --quiet
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"

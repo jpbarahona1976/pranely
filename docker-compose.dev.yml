@@ -1,0 +1,80 @@
+# =============================================================================
+# PRANELY - Docker Compose Dev
+# Desarrollo completo: Postgres + Redis + App services
+# =============================================================================
+
+services:
+  # -----------------------------------------------------------------------------
+  # Inherit from base
+  # -----------------------------------------------------------------------------
+  postgres:
+    extends:
+      file: docker-compose.base.yml
+      service: postgres
+
+  redis:
+    extends:
+      file: docker-compose.base.yml
+      service: redis
+
+  # -----------------------------------------------------------------------------
+  # Web - Next.js Frontend
+  # -----------------------------------------------------------------------------
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: pranely-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://api:8000
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - pranely-network
+
+  # -----------------------------------------------------------------------------
+  # API - FastAPI Backend
+  # -----------------------------------------------------------------------------
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: pranely-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://pranely:changeme@postgres:5432/pranely_dev
+      REDIS_URL: redis://redis:6379
+      ENVIRONMENT: development
+    volumes:
+      - ./apps/api:/app
+      - /app/__pycache__
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pranely-network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-network:
+    name: pranely-network
+    driver: bridge
