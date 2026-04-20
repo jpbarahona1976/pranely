@@ -1,62 +1,10 @@
 {
-  // ============================================
-  // PRANELY - Configuración de VS Code
-  // ============================================
-  
-  // Extensiones recomendadas
-  "extensions.recommended": [
-    "minimax-ai.minimax-chat",
-    "opencode-ai.opencode"
-  ],
-
-  // ============================================
-  // MINIMAX CHAT - Configuración
-  // ============================================
-  
-  // Carpeta de skills para Minimax Chat
-  "minimax.skillsFolder": ".agents/skills",
-  
-  // Archivos de contexto que debe leer al iniciar
+  "minimax.skillsFolder": ".agents^/skills",
+  "minimax.autoLoadSkills": true,
+  "minimax.autoReadContext": true,
   "minimax.contextFiles": [
     "PROJECT_STATE.md",
     "README.md",
-    "SYSTEM_PROMPT.md",
-    "PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/Skill Persistente_ Pranely Operating System (para Minimax M2.md"
-  ],
-
-  // Habilitar carga automática de skills
-  "minimax.autoLoadSkills": true,
-  
-  // Habilitar lectura de archivos de contexto
-  "minimax.autoReadContext": true,
-
-  // ============================================
-  // OPENCODE - Configuración
-  // ============================================
-  
-  // Carpeta de skills para OpenCode
-  "opencode.skillsFolder": ".agents/skills",
-  
-  // Archivos de contexto
-  "opencode.contextFiles": [
-    "PROJECT_STATE.md",
-    "README.md",
     "SYSTEM_PROMPT.md"
-  ],
-
-  // ============================================
-  // CONFIGURACIÓN GENERAL
-  // ============================================
-  
-  // Excluir archivos grandes del contexto
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/.git": true,
-    "**/dist": true,
-    "**/build": true
-  },
-
-  // Habilitar Git
-  "git.enabled": true,
-  "git.autoRepositoryDetection": true
+  ]
 }
