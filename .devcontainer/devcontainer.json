@@ -1,12 +1,15 @@
 {
   "name": "PRANELY Dev Container",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "22"
+      "version": "22.13.1"
     },
-    "ghcr.io/devcontainers-contrib/features/python-poetry:1": {}
+    "ghcr.io/devcontainers-contrib/features/python-poetry:1": {
+      "version": "1.8.3"
+    }
   },
   "forwardPorts": [3000, 8000, 5432, 6379],
   "portsAttributes": {
@@ -41,6 +44,7 @@
   },
   "postCreateCommand": "bash scripts/dev-init.sh",
   "remoteEnv": {
-    "NODE_ENV": "development"
+    "NODE_ENV": "development",
+    "PYTHON_ENV": "development"
   }
 }

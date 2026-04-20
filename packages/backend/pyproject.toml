@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "pranely-backend"
+version = "0.1.0"
+description = "PRANELY Backend API"
+authors = ["PRANELY Team"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.7"
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
+pydantic = "^2.10.0"
+sqlalchemy = "^2.0.0"
+asyncpg = "^0.30.0"
+redis = "^5.2.0"
+rq = "^1.16.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.8.0"
+mypy = "^1.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "312"
+
+[tool.mypy]
+python_version = "3.12"

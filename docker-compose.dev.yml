@@ -1,40 +1,75 @@
 # =============================================================================
-# PRANELY - Docker Compose Dev
-# Desarrollo completo: Postgres + Redis + App services
+# PRANELY - Docker Compose Dev (0B)
+# Desarrollo completo: Postgres + Redis + Frontend + Backend
 # =============================================================================
 
 services:
   # -----------------------------------------------------------------------------
-  # Inherit from base
+  # PostgreSQL 16 - Base de datos principal
   # -----------------------------------------------------------------------------
   postgres:
-    extends:
-      file: docker-compose.base.yml
-      service: postgres
+    image: postgres:16-alpine
+    container_name: pranely-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pranely
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: pranely_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pranely -d pranely_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pranely-network
 
+  # -----------------------------------------------------------------------------
+  # Redis 7 - Cache y colas
+  # -----------------------------------------------------------------------------
   redis:
-    extends:
-      file: docker-compose.base.yml
-      service: redis
+    image: redis:7-alpine
+    container_name: pranely-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - pranely-network
 
   # -----------------------------------------------------------------------------
   # Frontend - Next.js
   # -----------------------------------------------------------------------------
   frontend:
     build:
-      context: ./packages/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.node
+    image: pranely-frontend:0b
     container_name: pranely-frontend
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
     volumes:
       - ./packages/frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - frontend_node_modules:/app/node_modules
+      - frontend_next_cache:/app/.next
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,8 +85,9 @@ services:
   # -----------------------------------------------------------------------------
   backend:
     build:
-      context: ./packages/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.python
+    image: pranely-backend:0b
     container_name: pranely-backend
     restart: unless-stopped
     ports:
@@ -60,9 +96,11 @@ services:
       DATABASE_URL: postgresql://pranely:changeme@postgres:5432/pranely_dev
       REDIS_URL: redis://redis:6379
       ENVIRONMENT: development
+      LOG_LEVEL: INFO
     volumes:
       - ./packages/backend:/app
-      - /app/__pycache__
+      - backend_venv:/app/.venv
+      - backend_pycache:/app/__pycache__
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,6 +108,23 @@ services:
         condition: service_healthy
     networks:
       - pranely-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    name: pranely-postgres-data
+  redis_data:
+    name: pranely-redis-data
+  frontend_node_modules:
+    name: pranely-frontend-node-modules
+  frontend_next_cache:
+    name: pranely-frontend-next-cache
+  backend_venv:
+    name: pranely-backend-venv
+  backend_pycache:
+    name: pranely-backend-pycache
 
 # =============================================================================
 # Networks
