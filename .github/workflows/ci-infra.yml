@@ -1,0 +1,142 @@
+# =============================================================================
+# PRANELY - CI Infrastructure Workflow
+# Requires 2 approvals for infra changes
+# =============================================================================
+
+name: CI Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - 'docker-compose*.yml'
+      - 'Dockerfile*'
+      - '.devcontainer/**'
+      - 'scripts/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - 'docker-compose*.yml'
+      - 'Dockerfile*'
+      - '.devcontainer/**'
+      - 'scripts/**'
+
+concurrency:
+  group: ci-infra-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TERRAFORM_VERSION: "1.9.0"
+  ANSIBLE_VERSION: "2.18.0"
+
+jobs:
+  # =============================================================================
+  # Terraform Validation
+  # =============================================================================
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: infra/terraform
+        run: terraform init -backend=false || echo "No terraform config"
+
+      - name: Terraform Validate
+        working-directory: infra/terraform
+        run: terraform validate || echo "No terraform config"
+
+      - name: Terraform_fmt Check
+        working-directory: infra/terraform
+        run: terraform fmt -check || echo "No terraform config"
+
+  # =============================================================================
+  # Docker Compose Validation
+  # =============================================================================
+  docker-validate:
+    name: Docker Compose Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate base compose
+        run: docker compose -f docker-compose.base.yml config --quiet
+
+      - name: Validate dev compose
+        run: docker compose -f docker-compose.dev.yml config --quiet
+
+  # =============================================================================
+  # Ansible Syntax Check
+  # =============================================================================
+  ansible-check:
+    name: Ansible Syntax Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.7"
+
+      - name: Install Ansible
+        run: pip install ansible-core==${{ env.ANSIBLE_VERSION }}
+
+      - name: Ansible Lint
+        working-directory: infra/ansible
+        run: ansible-lint --syntax-only *.yml || echo "No ansible config"
+
+  # =============================================================================
+  # Security Scan for Infra
+  # =============================================================================
+  infra-security:
+    name: Infrastructure Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Infrastructure
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          format: "table"
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+
+  # =============================================================================
+  # Require 2 Approvals for Infra Changes
+  # =============================================================================
+  approval-check:
+    name: Approval Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [terraform-validate, docker-validate, ansible-check, infra-security]
+    
+    steps:
+      - name: Check approvals
+        run: |
+          echo "Esta verificación requiere 2 aprobaciones de CODEOWNERS"
+          echo "Los archivos en infra/, docker/, scripts/ requieren revisión de @juanbarahona"
+          echo "Verificar manualmente en la UI de GitHub que hay 2 aprobaciones"

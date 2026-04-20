@@ -1,0 +1,107 @@
+# =============================================================================
+# PRANELY - Dependabot Configuration
+# Actualizaciones con ventanas semanales
+# =============================================================================
+
+version: 2
+registries:
+  github-docker:
+    type: "docker-registry"
+    url: "https://ghcr.io"
+    username: "${{github.actor}}"
+    password: "${{secrets.GITHUB_TOKEN}}"
+
+updates:
+  # =============================================================================
+  # npm/pnpm - Frontend dependencies
+  # =============================================================================
+  - package-ecosystem: "npm"
+    directory: "/packages/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-request-limit: 5
+    commit-message:
+      prefix: "deps(frontend)"
+      include: "scope"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # =============================================================================
+  # Python - Backend dependencies
+  # =============================================================================
+  - package-ecosystem: "pip"
+    directory: "/packages/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-request-limit: 5
+    commit-message:
+      prefix: "deps(backend)"
+      include: "scope"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # =============================================================================
+  # Docker - Base images
+  # =============================================================================
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-request-limit: 3
+    commit-message:
+      prefix: "deps(docker)"
+      include: "scope"
+    registries:
+      - "github-docker"
+    ignore:
+      # No actualizar automáticamente versiones mayores
+      - dependency-name: "node"
+        update-types: ["major"]
+      - dependency-name: "python"
+        update-types: ["major"]
+
+  # =============================================================================
+  # GitHub Actions
+  # =============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+      time: "09:00"
+      timezone: "America/Mexico_City"
+    open-pull-request-limit: 3
+    commit-message:
+      prefix: "deps(actions)"
+      include: "scope"
+    groups:
+      actions:
+        patterns:
+          - "*"
