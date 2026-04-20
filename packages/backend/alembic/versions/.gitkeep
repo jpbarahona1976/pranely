@@ -1,0 +1,14 @@
+# A generic, cross-database, cross-table, and cross-column
+# comment table.
+revision = '001'
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    pass
+
+
+def downgrade() -> None:
+    pass
