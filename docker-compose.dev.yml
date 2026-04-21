@@ -55,8 +55,8 @@ services:
   # -----------------------------------------------------------------------------
   frontend:
     build:
-      context: .
-      dockerfile: packages/frontend/Dockerfile
+      context: packages/frontend
+      dockerfile: Dockerfile
     image: pranely-frontend:dev
     container_name: pranely-frontend
     restart: unless-stopped
@@ -85,8 +85,8 @@ services:
   # -----------------------------------------------------------------------------
   backend:
     build:
-      context: .
-      dockerfile: packages/backend/Dockerfile
+      context: packages/backend
+      dockerfile: Dockerfile
     image: pranely-backend:dev
     container_name: pranely-backend
     restart: unless-stopped
