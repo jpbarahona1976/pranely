@@ -1,11 +1,11 @@
 # =============================================================================
-# PRANELY - Docker Compose Dev (0B)
-# Desarrollo completo: Postgres + Redis + Frontend + Backend
+# PRANELY - Docker Compose Dev (Fase 1)
+# Desarrollo: Postgres + Redis + Frontend + Backend con hot reload
 # =============================================================================
 
 services:
   # -----------------------------------------------------------------------------
-  # PostgreSQL 16 - Base de datos principal
+  # PostgreSQL 16 - Base de datos (extiende de base.yml)
   # -----------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
@@ -30,7 +30,7 @@ services:
       - pranely-network
 
   # -----------------------------------------------------------------------------
-  # Redis 7 - Cache y colas
+  # Redis 7 - Cache y colas (extiende de base.yml)
   # -----------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
@@ -51,15 +51,16 @@ services:
       - pranely-network
 
   # -----------------------------------------------------------------------------
-  # Frontend - Next.js
+  # Frontend - Next.js con hot reload
   # -----------------------------------------------------------------------------
   frontend:
     build:
       context: .
       dockerfile: packages/frontend/Dockerfile
-    image: pranely-frontend:0b
+    image: pranely-frontend:dev
     container_name: pranely-frontend
     restart: unless-stopped
+    command: pnpm dev
     ports:
       - "3000:3000"
     environment:
@@ -68,8 +69,7 @@ services:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
     volumes:
       - ./packages/frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_next_cache:/app/.next
+      - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,26 +81,26 @@ services:
       - pranely-network
 
   # -----------------------------------------------------------------------------
-  # Backend - FastAPI
+  # Backend - FastAPI con hot reload
   # -----------------------------------------------------------------------------
   backend:
     build:
       context: .
       dockerfile: packages/backend/Dockerfile
-    image: pranely-backend:0b
+    image: pranely-backend:dev
     container_name: pranely-backend
     restart: unless-stopped
+    command: sh -c "cd /app && poetry install --no-interaction && poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://pranely:changeme@postgres:5432/pranely_dev
       REDIS_URL: redis://redis:6379
-      ENVIRONMENT: development
-      LOG_LEVEL: INFO
+      ENV: development
+      PYTHONPATH: /app
     volumes:
       - ./packages/backend:/app
-      - backend_venv:/app/.venv
-      - backend_pycache:/app/__pycache__
+      - /app/.venv
     depends_on:
       postgres:
         condition: service_healthy
@@ -117,14 +117,6 @@ volumes:
     name: pranely-postgres-data
   redis_data:
     name: pranely-redis-data
-  frontend_node_modules:
-    name: pranely-frontend-node-modules
-  frontend_next_cache:
-    name: pranely-frontend-next-cache
-  backend_venv:
-    name: pranely-backend-venv
-  backend_pycache:
-    name: pranely-backend-pycache
 
 # =============================================================================
 # Networks
