@@ -249,7 +249,7 @@ services:
 **Healthchecks:**
 - Postgres: `pg_isready -U pranely -d pranely_dev`
 - Redis: `redis-cli ping`
-- Backend: `GET /api/health → 200 {"status":"healthy"}`
+- Backend: `GET /api/health → 200 {"status":"ok"}`
 - Frontend: `curl http://localhost:3000`
 
 **Volúmenes:**
