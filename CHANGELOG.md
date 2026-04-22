@@ -7,7 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED]
 
-### Fase 1A: Authentication (JWT + Argon2id) ✅
+### Próximas tareas
+
+- [ ] 1C: CRUD API endpoints
+
+---
+
+## [1.2.0] - 2026-04-22
+
+> **BLOQUE 1B CERRADO** ✅
+> Modelos de dominio implementados: Employer, Transporter, Residue, EmployerTransporterLink.
+> Schemas Pydantic listos para fase 1C. Tests unitarios y de aislamiento multi-tenant incluidos.
+
+### Added
+
+#### Fase 1B: Modelos de dominio ✅
+
+**Backend - Models** (`app/models.py`)
+- `Employer` - Entidad empresa/empleador con RFC, dirección, industria
+- `Transporter` - Entidad transportista con license_number, vehicle_plate
+- `Residue` - Entidad residuo con waste_type (NOM-052), weight_kg, volume_m3
+- `EmployerTransporterLink` - Asociación N:M empleadores-transportistas
+- `EntityStatus` enum: ACTIVE, INACTIVE, PENDING
+- `WasteType` enum: PELIGROSO, ESPECIAL, INERTE, ORGANICO, RECICLABLE
+- `WasteStatus` enum: PENDING, ACTIVE, DISPOSED, ARCHIVED
+- `archived_at` - Soft delete timestamp indexing (H2)
+- RFC único por tenant + indices de rendimiento (A1, A2)
+
+**Backend - Schemas** (`app/schemas/domain.py`)
+- EmployerCreate, EmployerUpdate, EmployerResponse, EmployerListResponse
+- TransporterCreate, TransporterUpdate, TransporterResponse, TransporterListResponse
+- ResidueCreate, ResidueUpdate, ResidueResponse, ResidueListResponse
+- EmployerTransporterLink schemas
+- Schemas de relaciones (EmployerWithRelations, ResidueWithEmployer, etc.)
+- RFC validation con soporte para Ñ y & (H1)
+- EmailStr validation (A3)
+
+**Backend - Tests** (`tests/test_domain_models.py`)
+- 42 tests passing (38 original + 4 nuevos para H1/H2)
+- TestEnums: Validación de enumeraciones
+- TestEmployerModel: CRUD, relaciones, constraints
+- TestTransporterModel: CRUD, relaciones
+- TestResidueModel: CRUD, waste_type enum
+- TestEmployerTransporterLink: unique constraint
+- TestMultiTenancyIsolation: Verificación de aislamiento por org_id
+- TestDomainSchemas: Validación Pydantic schemas
+- TestArchivedAtSoftDelete: H2 archived_at field
+- TestRFCWithEnye: H1 RFC con Ñ y &
+
+**Dependencies** (`pyproject.toml`)
+- email-validator = "^2.1.0" (H3)
+
+**Documentation** (`docs/FASE-1B-DOMAIN-MODELS.md`)
+- Diagrama de entidades con relaciones
+- Referencia de enumeraciones
+- Notas de implementación multi-tenant
+
+**Commits:**
+- `models: add Employer, Transporter, Residue domain entities`
+- `schemas: add domain entity Pydantic schemas`
+- `tests: add domain models unit tests with tenant isolation`
+- `fix: apply H1-H3 fixes (RFC pattern, archived_at, email-validator)`
+
+---
+
+## [1.1.0] - 2026-04-21
+
+> **BLOQUE 0C/1A CERRADO** ✅
+> Deuda técnica resuelta. Auditorías Minimax M2.5 + Gemini 3.1 Pro verificadas.
+> Tests: 18 passed, 0 warnings. Git: working tree clean.
+
+### Added
+
+#### Fase 1A: Authentication (JWT + Argon2id) ✅
 
 **Backend - Models**
 - `app/models.py` - User, Organization, Membership entities
@@ -37,17 +109,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Infrastructure**
 - `packages/backend/.env.example` - Environment template
 - `packages/backend/.env` - Development env (gitignored)
-- Updated `pyproject.toml` with argon2-cffi, python-jose, aiosqlite
+- `pyproject.toml` - argon2-cffi, python-jose, aiosqlite, psycopg2-binary
 
-**Fase 1A Technical Debt Resolution ✅**
-- `app/core/config.py` - Export singleton `settings = get_settings()` (ImportError fix)
-- `app/models.py` - Replace `default_factory=lambda: datetime.now()` with `default=_utcnow` (SQLAlchemy ArgumentError fix)
-- `app/models.py` - Replace `datetime.utcnow` with `datetime.now(timezone.utc)` (Python 3.12 deprecation fix)
-- `app/api/auth.py` - Align error messages to test contract ("already registered", "Invalid credentials")
-- `tests/conftest.py` - Remove redundant `event_loop` fixture (pytest-asyncio 0.24 warning fix)
-- `tests/conftest.py` - Remove unused `asyncio`, `pytest` imports
+**Commits:**
+- [`4ac0c53`](https://github.com/pranely/pranely/commit/4ac0c53) - fix: resolve technical debt from Fase 0C audit
+- [`fe6d55c`](https://github.com/pranely/pranely/commit/fe6d55c) - feat(1A): implement JWT authentication
+
+---
+
+### Fixed
+
+#### Fase 1A: Authentication Stabilization ✅
+
+**Fixes técnicos aplicados:**
+- `app/core/config.py` - Export singleton `settings = get_settings()` (ImportError)
+- `app/models.py` - Replace `default_factory` with `default=_utcnow` (SQLAlchemy ArgumentError)
+- `app/models.py` - Replace `datetime.utcnow` with `datetime.now(timezone.utc)` (Python 3.12 deprecation)
+- `app/api/auth.py` - Align error messages to test contract
+- `tests/conftest.py` - Remove redundant `event_loop` fixture (pytest-asyncio 0.24)
+- `packages/backend/pyproject.toml` - Added psycopg2-binary
+- `.github/workflows/ci-base.yml` - Remove `continue-on-error: true` (CI gates strict)
+- `docker-compose.dev.yml` - Frontend healthcheck added
 
 **Test Results:** 18 passed, 0 warnings
+
+---
+
+### Removed
+
+- ~~`quarantine/`~~ → Eliminada definitivamente
 
 ---
 
@@ -163,16 +253,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-#### Fase 1: Authentication Stabilization ✅
-
-**Fixes técnicos aplicados:**
-- `app/core/config.py` - Export singleton `settings = get_settings()` (ImportError)
-- `app/models.py` - Replace `default_factory=lambda: datetime.now()` with `default=_utcnow`
-- `app/models.py` - Replace `datetime.utcnow` with `datetime.now(timezone.utc)` (Python 3.12 deprecation)
-- `app/api/auth.py` - Align error messages to test contract
-- `tests/conftest.py` - Remove redundant `event_loop` fixture (pytest-asyncio 0.24)
-- Resultado: **18 passed, 0 warnings**
-
 #### Fase 1: Estabilización
 
 - **docker-compose.dev.yml** - Modo desarrollo con hot reload
@@ -188,7 +268,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ~~`apps/`~~ → Migrado a `packages/`
 - ~~`infra/`~~ → Placeholder (terraform/ansible vacíos)
 - ~~`tests/`~~ → Sin uso en baseline
-- ~~Contenido en cuarentena~~ → `quarantine/`
 
 ---
 
@@ -210,6 +289,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[UNRELEASED]: https://github.com/pranely/pranely/compare/v1.0.0...HEAD
+[UNRELEASED]: https://github.com/pranely/pranely/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/pranely/pranely/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pranely/pranely/releases/tag/v1.0.0
 [0.0.1]: https://github.com/pranely/pranely/releases/tag/v0.0.1

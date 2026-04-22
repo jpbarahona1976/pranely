@@ -43,6 +43,12 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture(scope="function")
+async def db(db_session: AsyncSession) -> AsyncSession:
+    """Alias for db_session for compatibility."""
+    return db_session
+
+
+@pytest_asyncio.fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create test client with database session override."""
     
