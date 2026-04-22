@@ -5,7 +5,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.employers import router as employers_router
+from app.api.employer_transporter_links import router as links_router
 from app.api.health import router as health_router
+from app.api.residues import router as residues_router
+from app.api.transporters import router as transporters_router
 from app.core.database import close_db, init_db
 
 
@@ -38,6 +42,10 @@ app.add_middleware(
 # Include routers
 app.include_router(health_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(employers_router, prefix="/api")
+app.include_router(transporters_router, prefix="/api")
+app.include_router(residues_router, prefix="/api")
+app.include_router(links_router, prefix="/api")
 
 
 @app.get("/")

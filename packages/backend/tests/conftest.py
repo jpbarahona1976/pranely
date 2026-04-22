@@ -1,5 +1,12 @@
 """Pytest configuration and fixtures for tests."""
+import os
 from typing import AsyncGenerator
+
+# Set required environment variables BEFORE importing app modules
+# This is required because app.core.config runs get_settings() at module load time
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only-32chars")
+os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost/test")
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient

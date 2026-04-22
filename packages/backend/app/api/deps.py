@@ -10,14 +10,28 @@ from app.core.database import get_db
 from app.core.tokens import decode_token
 from app.models import User
 
-security = HTTPBearer()
+# Use auto_error=False so we can handle the 401 ourselves
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+        HTTPBearer(auto_error=False)
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Get the current authenticated user from JWT token."""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "type": "https://api.pranely.com/errors/auth",
+                "title": "No token",
+                "status": 401,
+                "detail": "Authentication required",
+            },
+        )
+    
     token = credentials.credentials
     payload = decode_token(token)
     

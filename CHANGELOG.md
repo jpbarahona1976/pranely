@@ -9,7 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 1C: CRUD API endpoints
+- [ ] 1C: CRUD API endpoints ✅ **COMPLETADO**
+
+---
+
+## [1.3.0] - 2026-04-23
+
+> **BLOQUE 1C CERRADO** ✅
+> CRUD API endpoints implementados para Employer, Transporter, Residue, EmployerTransporterLink.
+> Tests de integración con aislamiento multi-tenant verificados. 110 tests passing.
+
+### Added
+
+#### Fase 1C: CRUD API Endpoints ✅
+
+**Backend - Dependencies** (`app/api/org_deps.py`)
+- `get_current_org` - Dependency para obtener org actual del token JWT
+- `get_optional_org` - Versión opcional
+- Validación de membership y existencia de organización
+
+**Backend - Routers** (`app/api/`)
+- `employers.py` - CRUD completo con filtros, búsqueda, paginación
+- `transporters.py` - CRUD completo con filtros, búsqueda, paginación
+- `residues.py` - CRUD completo con filtros por employer/waste_type/status
+- `employer_transporter_links.py` - CRUD para relación N:M
+
+**Endpoints implementados:**
+| Recurso | Métodos |
+|---------|---------|
+| Employers | POST /api/employers, GET /api/employers, GET /api/employers/{id}, PATCH /api/employers/{id}, DELETE /api/employers/{id} |
+| Transporters | POST /api/transporters, GET /api/transporters, GET /api/transporters/{id}, PATCH /api/transporters/{id}, DELETE /api/transporters/{id} |
+| Residues | POST /api/residues, GET /api/residues, GET /api/residues/{id}, PATCH /api/residues/{id}, DELETE /api/residues/{id} |
+| Links | POST /api/employer-transporter-links, GET /api/employer-transporter-links, GET /api/employer-transporter-links/{id}, PATCH /api/employer-transporter-links/{id}, DELETE /api/employer-transporter-links/{id} |
+
+**Features:**
+- Multi-tenant: todas las queries filtran por organization_id
+- Soft-delete: Employer y Transporter usan archived_at
+- Paginación: page, page_size, search, status_filter
+- Validaciones: RFC único por tenant, employer/transporter existen
+- Aislamiento cross-tenant verificado en tests
+
+**Backend - Tests** (`tests/`)
+- `test_employers_api.py` - 16 tests (CRUD + isolation)
+- `test_transporters_api.py` - 12 tests (CRUD + isolation)
+- `test_residues_api.py` - 13 tests (CRUD + validaciones)
+- `test_employer_transporter_links_api.py` - 14 tests (CRUD + validaciones)
+
+**Commits:**
+- `feat(1C): add org_deps.py for tenant context`
+- `feat(1C): add employers CRUD router`
+- `feat(1C): add transporters CRUD router`
+- `feat(1C): add residues CRUD router`
+- `feat(1C): add employer-transporter-links CRUD router`
+- `feat(1C): register all routers in main.py`
+- `feat(1C): add employers API tests`
+- `feat(1C): add transporters API tests`
+- `feat(1C): add residues API tests`
+- `feat(1C): add employer-transporter-links API tests`
 
 ---
 
