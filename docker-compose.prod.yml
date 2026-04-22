@@ -136,14 +136,12 @@ services:
     command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
     ports:
       - "8000:8000"
+    env_file:
+      - packages/backend/.env.production
     environment:
-      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD}@postgres:5432/pranely_prod
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY required}
-      ENV: production
-      DEBUG: "false"
+      # Override DATABASE_URL with Docker network credentials
+      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@postgres:5432/pranely_prod
       PYTHONPATH: /app
-      LOG_LEVEL: info
     volumes:
       - ./packages/backend:/app
       - backend_logs:/app/logs
@@ -177,14 +175,12 @@ services:
     command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
     ports:
       - "8001:8000"
+    env_file:
+      - packages/backend/.env.production
     environment:
-      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD}@postgres:5432/pranely_prod
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY required}
-      ENV: production
-      DEBUG: "false"
+      # Override DATABASE_URL with Docker network credentials
+      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@postgres:5432/pranely_prod
       PYTHONPATH: /app
-      LOG_LEVEL: info
     volumes:
       - ./packages/backend:/app
       - backend_logs:/app/logs
