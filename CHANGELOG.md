@@ -9,9 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 2A: Arquitectura - Stack/ADR ✅ **PENDIENTE**
 - [ ] 2B: Arquitectura - Contratos API ✅ **PENDIENTE**
 - [ ] 2C: Arquitectura - Deploy seguro ✅ **PENDIENTE**
+
+### En proceso
+
+- [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
+
+---
+
+## [1.4.0] - 2026-04-23
+
+> **BLOQUE 2A CERRADO** ✅
+> Stack tecnológico MVP confirmado. ADR-0002 creado. Sin cambios de arquitectura.
+
+### Added
+
+#### Fase 2A: Stack/ADR Arquitectónico ✅
+
+**Documentation - ADR-0002** (`docs/decisions/ADR-0002-STACK-ARQUITECTONICO-MVP.md`)
+- Inventario técnico completo verificado contra repo
+- Decisiones fijadas: Frontend, Backend, DB, Async, Deploy
+- Gaps identificados (RQ workers, Alembic, RLS)
+- Relación documentada con fases 2B y 2C
+
+**Stack confirmado:**
+| Capa | Tecnología | Versión |
+|------|------------|---------|
+| Frontend | Next.js 15 + TypeScript + Tailwind | 15.1.0 / 5.7.3 / 3.4 |
+| Backend | FastAPI + SQLAlchemy + Pydantic | 0.115+ / 2.0 / 2.9 |
+| DB | PostgreSQL 16 + asyncpg | 16-alpine |
+| Cola | Redis 7 + RQ | 7-alpine (RQ pendiente) |
+| Auth | JWT + Argon2 | python-jose / argon2-cffi |
+
+**Commits:**
+- `ADR-0002` - docs: fase 2A complete, stack arquitectónico confirmado
 
 ---
 
