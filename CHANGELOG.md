@@ -37,16 +37,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Hardening** (`.env` / `.env.example`)
 - `.env.example` - Template limpio sin secrets reales
+- `.env.production.example` - Template para produccion
+- `.env.staging` - Variables staging (gitignored)
 - Placeholders `<INSERT_SECRET_KEY_HERE>`, `<USER>`, `<PASSWORD>`, etc.
 - Documentacion de cada seccion
 - NO passwords en templates
 
 **Docker Compose Security**
 - `docker-compose.dev.yml` - Usa env_file + override DATABASE_URL
-- `docker-compose.staging.yml` - Eliminado fallback inseguro `${VAR:-default}`
+- `docker-compose.staging.yml` - Usa env_file + elimina fallback inseguro
+- `docker-compose.prod.yml` - Usa env_file + consistencia con staging
 - Todos los servicios usan `${VAR:?VAR required}` en produccion
 
 **Gitleaks v2** (`.gitleaks.toml`)
+- 32+ reglas de deteccion (Stripe, AWS, DeepInfra, OpenAI, SendGrid, etc.)
 - Reglas PRANELY: jwt-secret, database-url, redis-password
 - Reglas cloud: AWS keys, Stripe keys (live + test)
 - Reglas connection strings: MongoDB, MySQL, PostgreSQL, Redis, RabbitMQ
@@ -56,12 +60,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Security Files** (`packages/backend/`)
 - `.env` - Secrets dev locales (gitignored)
 - `.env.example` - Template limpio para onboarding
+- `.env.staging` - Template staging
+- `.env.production.example` - Template produccion
+- `tests/test_security.py` - Suite 16 tests de seguridad
 
 **Commits:**
 - `docs: fase 3A secrets management policy`
 - `security: harden docker-compose secrets handling`
 - `security: gitleaks v2 strict rules`
 - `fix: .env.example template cleanup`
+- `fix: fase 3A critical fixes`
+- `fix: fase 3A docker-compose.prod env_file consistency`
+- `chore: add .env.production.example template`
+
+### Tests
+
+- `test_security.py` - 16 tests passing
+  - Secrets hardening validation
+  - Docker compose security checks
+  - Gitleaks configuration verification
+  - Env templates cleanliness
 
 ---
 
