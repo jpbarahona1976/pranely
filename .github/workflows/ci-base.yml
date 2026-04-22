@@ -51,23 +51,19 @@ jobs:
       - name: Install dependencies
         working-directory: packages/frontend
         run: pnpm install --frozen-lockfile
-        continue-on-error: true
 
       - name: TypeScript check
         working-directory: packages/frontend
         run: pnpm exec tsc --noEmit
-        continue-on-error: true
 
       - name: ESLint
         working-directory: packages/frontend
-        run: pnpm run lint || true
-        continue-on-error: true
+        run: pnpm run lint
 
       - name: Python lint
         run: |
           python -m pip install ruff==0.8.0
           ruff check packages/backend/
-        continue-on-error: true
 
   # =============================================================================
   # Unit Tests
@@ -92,12 +88,10 @@ jobs:
       - name: Install dependencies
         working-directory: packages/frontend
         run: pnpm install --frozen-lockfile
-        continue-on-error: true
 
       - name: Run tests (Frontend)
         working-directory: packages/frontend
         run: pnpm test --coverage --coverage-threshold=80
-        continue-on-error: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -111,12 +105,10 @@ jobs:
       - name: Install dependencies (Backend)
         working-directory: packages/backend
         run: poetry install --no-interaction
-        continue-on-error: true
 
       - name: Run tests (Backend)
         working-directory: packages/backend
         run: poetry run pytest --cov=app --cov-fail-under=80
-        continue-on-error: true
 
   # =============================================================================
   # Security Scan - Gitleaks
@@ -167,4 +159,3 @@ jobs:
         with:
           task: structure
           artifact-server-name: localhost
-        continue-on-error: true

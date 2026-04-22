@@ -7,11 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED]
 
-### Próximas tareas
+### Fase 1A: Authentication (JWT + Argon2id) ✅
 
-- [ ] 1A: Sistema de Autenticación (JWT + OAuth)
-- [ ] 1B: Modelos de dominio (Empresa, Residuo, Transportista)
-- [ ] 1C: CRUD API endpoints
+**Backend - Models**
+- `app/models.py` - User, Organization, Membership entities
+- `app/core/security.py` - Argon2id password hashing
+- `app/core/tokens.py` - JWT token creation/validation
+
+**Backend - API Endpoints**
+- `app/api/auth.py` - POST /api/auth/register, POST /api/auth/login
+- `app/api/deps.py` - JWT authentication dependency
+- `app/schemas/auth.py` - Request/response Pydantic schemas
+
+**Backend - Tests**
+- `tests/test_auth.py` - Register/login endpoint tests
+- `tests/test_security.py` - Password hashing tests
+- `tests/test_tokens.py` - JWT token tests
+
+**Frontend - Auth Flow**
+- `src/contexts/AuthContext.tsx` - Auth state management
+- `src/components/ProtectedRoute.tsx` - Route guard
+- `src/components/LoginForm.tsx` - Login form
+- `src/components/RegisterForm.tsx` - Registration form
+- `src/app/login/page.tsx` - Login page
+- `src/app/register/page.tsx` - Register page
+- `src/app/dashboard/page.tsx` - Protected dashboard
+- `src/app/page.tsx` - Redirect to login/dashboard
+
+**Infrastructure**
+- `packages/backend/.env.example` - Environment template
+- `packages/backend/.env` - Development env (gitignored)
+- Updated `pyproject.toml` with argon2-cffi, python-jose, aiosqlite
+
+**Fase 1A Technical Debt Resolution ✅**
+- `app/core/config.py` - Export singleton `settings = get_settings()` (ImportError fix)
+- `app/models.py` - Replace `default_factory=lambda: datetime.now()` with `default=_utcnow` (SQLAlchemy ArgumentError fix)
+- `app/models.py` - Replace `datetime.utcnow` with `datetime.now(timezone.utc)` (Python 3.12 deprecation fix)
+- `app/api/auth.py` - Align error messages to test contract ("already registered", "Invalid credentials")
+- `tests/conftest.py` - Remove redundant `event_loop` fixture (pytest-asyncio 0.24 warning fix)
+- `tests/conftest.py` - Remove unused `asyncio`, `pytest` imports
+
+**Test Results:** 18 passed, 0 warnings
 
 ---
 
@@ -19,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-#### Fase 1: Scaffold
+#### Fase 1: Scaffold ✅
 
 **Next.js 15.1.0 + Tailwind**
 - `package.json` - Next.js 15.1.0, React 19, Tailwind CSS, tRPC
@@ -36,14 +72,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pyproject.toml` - FastAPI 0.115, SQLAlchemy 2.0, Pydantic 2.9
 - `alembic.ini` - Configuración de migraciones
 - `alembic/` - Estructura de migraciones
-- `app/main.py` - FastAPI app factory
+- `app/main.py` - FastAPI app factory (con health router)
 - `app/core/config.py` - Settings con Pydantic V2
 - `app/core/database.py` - SQLAlchemy async engine
-- `app/api/health.py` - Health check endpoint
+- `app/api/health.py` - Health check endpoint `/api/health`
 
 **Docker**
 - `packages/frontend/Dockerfile` - Multi-stage Next.js
 - `packages/backend/Dockerfile` - Multi-stage FastAPI
+- `docker-compose.dev.yml` - **Modo desarrollo con hot reload**
+  - `pnpm dev` para frontend
+  - `uvicorn --reload` para backend
+  - Volumes preservan node_modules/.venv
 
 **Commit:** [`e041cd2`](https://github.com/pranely/pranely/commit/e041cd2) - 1A-1B: scaffold Next.js + FastAPI limpio
 
@@ -51,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fase 0: Fundación
 
-##### [0C] - Gobernanza y CI/CD
+##### [0C] - Gobernanza y CI/CD ✅
 
 **GitHub Actions**
 - `.github/workflows/ci-base.yml` - Lint, test, security, gitleaks
@@ -72,7 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-##### [0B] - Versiones Fijadas
+##### [0B] - Versiones Fijadas ✅
 
 **Versiones exactas**
 - Node.js: **22.13.1** (`.nvmrc`)
@@ -93,7 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-##### [0A] - Baseline Post-Cuarentena
+##### [0A] - Baseline Post-Cuarentena ✅
 
 **Estructura del monorepo**
 - `packages/frontend/` - Next.js frontend
@@ -102,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/decisions/ADR-0001-STACK-TECNOLOGICO.md` - ADR stack
 
 **Archivos de configuración**
-- `.gitignore` - Monorepo .gitignore
+- `.gitignore` - Monorepo .gitignore (incluye `next-env.d.ts`)
 - `.nvmrc` - Node 22.13.1
 - `.python-version` - Python 3.12.7
 - `LICENSE` - MIT License
@@ -121,6 +161,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+### Fixed
+
+#### Fase 1: Authentication Stabilization ✅
+
+**Fixes técnicos aplicados:**
+- `app/core/config.py` - Export singleton `settings = get_settings()` (ImportError)
+- `app/models.py` - Replace `default_factory=lambda: datetime.now()` with `default=_utcnow`
+- `app/models.py` - Replace `datetime.utcnow` with `datetime.now(timezone.utc)` (Python 3.12 deprecation)
+- `app/api/auth.py` - Align error messages to test contract
+- `tests/conftest.py` - Remove redundant `event_loop` fixture (pytest-asyncio 0.24)
+- Resultado: **18 passed, 0 warnings**
+
+#### Fase 1: Estabilización
+
+- **docker-compose.dev.yml** - Modo desarrollo con hot reload
+  - Frontend: `command: pnpm dev`
+  - Backend: `command: poetry install && uvicorn --reload`
+  - Volumes preservan node_modules y .venv
+- **.gitignore** - Agregado `next-env.d.ts` para ignorar archivo auto-generado
+
+---
+
 ### Removed
 
 - ~~`apps/`~~ → Migrado a `packages/`
@@ -135,6 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.gitleaks.toml` configurado para detección de secrets
 - `.env` en `.gitignore`
 - CODEOWNERS enforced para cambios de infra
+- `next-env.d.ts` ignorado (evita exponer tipos internos de Next.js)
 
 ---
 
