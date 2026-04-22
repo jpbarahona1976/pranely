@@ -9,13 +9,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 3A: Seguridad - Secretos Remediation
+- [ ] 3B: Seguridad - Authz/multi-tenant Isolation
 
 ### Completado
 
+- [x] 3A: Seguridad - Secretos Remediation ✅ **COMPLETADO**
 - [x] 2C: Arquitectura - Deploy seguro ✅ **COMPLETADO**
 - [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
 - [x] 2B: Arquitectura - Contratos API ✅ **COMPLETADO**
+
+---
+
+## [1.7.0] - 2026-04-23
+
+> **BLOQUE 3A CERRADO** ✅
+> Secrets remediation implementado. Politica de rotacion, gitleaks v2, hardening docker-compose.
+
+### Added
+
+#### Fase 3A: Secretos Remediation ✅
+
+**Documentation** (`docs/security/`)
+- `secrets-management.md` - Politica completa de gestion secrets
+- Rotacion obligatoria por tipo (JWT 90d, DB 30d, API 30d)
+- Protocolo de respuesta a incidentes
+- Generacion de secrets con entropia suficiente
+
+**Hardening** (`.env` / `.env.example`)
+- `.env.example` - Template limpio sin secrets reales
+- Placeholders `<INSERT_SECRET_KEY_HERE>`, `<USER>`, `<PASSWORD>`, etc.
+- Documentacion de cada seccion
+- NO passwords en templates
+
+**Docker Compose Security**
+- `docker-compose.dev.yml` - Usa env_file + override DATABASE_URL
+- `docker-compose.staging.yml` - Eliminado fallback inseguro `${VAR:-default}`
+- Todos los servicios usan `${VAR:?VAR required}` en produccion
+
+**Gitleaks v2** (`.gitleaks.toml`)
+- Reglas PRANELY: jwt-secret, database-url, redis-password
+- Reglas cloud: AWS keys, Stripe keys (live + test)
+- Reglas connection strings: MongoDB, MySQL, PostgreSQL, Redis, RabbitMQ
+- Reglas webhooks: Slack, Discord
+- Allowlist actualizado con excepciones validas
+
+**Security Files** (`packages/backend/`)
+- `.env` - Secrets dev locales (gitignored)
+- `.env.example` - Template limpio para onboarding
+
+**Commits:**
+- `docs: fase 3A secrets management policy`
+- `security: harden docker-compose secrets handling`
+- `security: gitleaks v2 strict rules`
+- `fix: .env.example template cleanup`
 
 ---
 
@@ -61,6 +107,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docker: staging + prod compose files`
 - `health: add deep healthcheck endpoints`
 - `tests: add health endpoints tests`
+
+### Fixed
+
+#### Fase 2C: Fix ImportError Health ✅
+
+**Critical Fix** (`packages/backend/app/api/health.py`)
+- `get_db_session()` → `get_db()` (función correcta de database.py)
+- 150 tests passing
+
+**Commit:**
+- `fix: health import error - get_db_session to get_db`
 
 ---
 

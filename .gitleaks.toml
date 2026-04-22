@@ -1,53 +1,282 @@
 # =============================================================================
-# PRANELY - Gitleaks Configuration
-# Secrets detection
+# PRANELY - Gitleaks Configuration v2.1
+# Secrets detection - Strict mode
 # =============================================================================
 
 [allowlist]
   description = "PRANELY allowed patterns"
   paths = [
-    'docs/.*',
-    'quarantine/.*',
-    '.*\\.md',
-    'LICENSE',
-    'packages/backend/tests/.*',
-    '.agents/.*',
-    'PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/.*',
-    '\\.github/.*',
+    "docs/.*",
+    "quarantine/.*",
+    ".*\\.md",
+    "LICENSE",
+    "packages/backend/tests/.*",
+    ".agents/.*",
+    "PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/.*",
+    "\\.github/.*",
+    "${{ secrets\\..+ }}",
+    "github\\.com/.*",
+    "packages/backend/.env.example",
   ]
 
+# =============================================================================
+# RULES - PRANELY Specific
+# =============================================================================
+
 [[rules]]
-  id = "pranely-api-key"
-  description = "PRANELY API Key"
-  regex = '''(?i)(pranely[_-]?api[_-]?key)[=:\s]['"''][a-zA-Z0-9]{20,}['"'']'''
-  tags = ["key", "pranely"]
+  id = "pranely-jwt-secret"
+  description = "PRANELY JWT SECRET_KEY"
+  regex = "SECRET_KEY\\s*[=:]\\s*['\"][a-zA-Z0-9+/=_-]{20,}['\"]"
+  tags = ["secret", "jwt", "critical"]
+
+[[rules]]
+  id = "pranely-database-url"
+  description = "PRANELY Database URL with credentials"
+  regex = "(postgresql|postgres|mysql|mariadb)://[^:'\"]+:[^:'\"]+@"
+  tags = ["secret", "database", "critical"]
+
+[[rules]]
+  id = "pranely-redis-password"
+  description = "PRANELY Redis URL with password"
+  regex = "redis://[^:]+:[^@]+@"
+  tags = ["secret", "redis"]
+
+# =============================================================================
+# RULES - Generic Secrets
+# =============================================================================
 
 [[rules]]
   id = "generic-api-key"
   description = "Generic API Key"
-  regex = '''(?i)(api[_-]?key)[=:\s]['"''][a-zA-Z0-9]{32,}['"'']'''
+  regex = "(?i)(api[_-]?key|apikey)[=: ]['\"][a-zA-Z0-9]{20,}['\"]"
   tags = ["key", "api"]
 
 [[rules]]
   id = "generic-password"
-  description = "Generic Password"
-  regex = '''(?i)password\s*[=:]\s*['"''].{8,}['"'']'''
+  description = "Generic Password Assignment"
+  regex = "(?i)(password|passwd|pwd)\\s*[=:]\\s*['\"][^'\"]{8,}['\"]"
   tags = ["secret", "password"]
 
 [[rules]]
+  id = "generic-token"
+  description = "Generic Secret Token"
+  regex = "(?i)(token|auth[_-]?token|access[_-]?token)\\s*[=:]\\s*['\"][a-zA-Z0-9_-]{20,}['\"]"
+  tags = ["secret", "token"]
+
+[[rules]]
+  id = "generic-private-key"
+  description = "Private Key detected"
+  regex = "-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----"
+  tags = ["key", "private", "critical"]
+
+# =============================================================================
+# RULES - Cloud Providers
+# =============================================================================
+
+[[rules]]
+  id = "aws-access-key"
+  description = "AWS Access Key"
+  regex = "(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"
+  tags = ["key", "aws"]
+
+[[rules]]
+  id = "aws-secret-key"
+  description = "AWS Secret Key"
+  regex = "(?i)aws[_-]?secret[_-]?access[_-]?key\\s*[=:]\\s*['\"][a-zA-Z0-9/+=]{40}['\"]"
+  tags = ["secret", "aws"]
+
+[[rules]]
+  id = "stripe-api-key"
+  description = "Stripe API Key"
+  regex = "sk_live_[0-9a-zA-Z]{24,}"
+  tags = ["key", "stripe", "payment"]
+
+[[rules]]
+  id = "stripe-test-key"
+  description = "Stripe Test Key"
+  regex = "sk_test_[0-9a-zA-Z]{24,}"
+  tags = ["key", "stripe", "payment"]
+
+# =============================================================================
+# RULES - GitHub/DevOps
+# =============================================================================
+
+[[rules]]
   id = "github-token"
-  description = "GitHub Token"
-  regex = '''(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}'''
+  description = "GitHub Personal Access Token"
+  regex = "(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}"
+  tags = ["key", "github"]
+
+[[rules]]
+  id = "github-oauth"
+  description = "GitHub OAuth Token"
+  regex = "gho_[A-Za-z0-9_]{36,}"
   tags = ["key", "github"]
 
 [[rules]]
   id = "docker-config"
   description = "Docker config auth"
-  regex = '''\"auths\":\s*\{[^}]*"[a-zA-Z0-9]+"'''
+  regex = "\"auths\":\\s*\\{[^}]*\"[a-zA-Z0-9]+\""
   tags = ["secret", "docker"]
 
+# =============================================================================
+# RULES - Connection Strings
+# =============================================================================
+
 [[rules]]
-  id = "env-file"
-  description = "Environment file with secrets"
-  regex = '''^\.env(\.[a-z]+)?$'''
+  id = "connection-string"
+  description = "Generic Connection String"
+  regex = "(mongodb|mysql|postgresql|postgres|redis|amqp|rabbitmq)://[^'\"]+:[^'\"]+@[^'\"]+"
+  tags = ["secret", "connection"]
+
+# =============================================================================
+# RULES - Environment Files (Block .env commits)
+# =============================================================================
+
+[[rules]]
+  id = "env-file-with-secrets"
+  description = "Environment file potentially containing secrets"
+  regex = "\\.env(\\\\.[a-z]+)?$"
   tags = ["file"]
+  [rules.allowlist]
+    paths = ["packages/backend/.env.example"]
+
+# =============================================================================
+# RULES - Slack/Discord Webhooks
+# =============================================================================
+
+[[rules]]
+  id = "slack-webhook"
+  description = "Slack Webhook URL"
+  regex = "https://hooks\\\\.slack\\\\.com/services/[A-Z0-9]+/[A-Z0-9]+/[a-zA-Z0-9]+"
+  tags = ["webhook", "slack"]
+
+[[rules]]
+  id = "discord-webhook"
+  description = "Discord Webhook URL"
+  regex = "https://discord(?:app)?\\\\.com/api/webhooks/[0-9]+/[a-zA-Z0-9_-]+"
+  tags = ["webhook", "discord"]
+
+# =============================================================================
+# RULES - AI/ML Services
+# =============================================================================
+
+[[rules]]
+  id = "openai-api-key"
+  description = "OpenAI API Key"
+  regex = "sk-[0-9a-zA-Z]{48,}"
+  tags = ["key", "openai", "ai"]
+
+[[rules]]
+  id = "deepinfra-api-key"
+  description = "DeepInfra API Key"
+  regex = "(?i)(deepinfra[_-]?api[_-]?key)[=: ]['\"][a-zA-Z0-9_-]{20,}['\"]"
+  tags = ["key", "deepinfra", "ai"]
+
+[[rules]]
+  id = "anthropic-api-key"
+  description = "Anthropic API Key"
+  regex = "sk-ant-[0-9a-zA-Z_-]{50,}"
+  tags = ["key", "anthropic", "ai"]
+
+# =============================================================================
+# RULES - Email Services
+# =============================================================================
+
+[[rules]]
+  id = "sendgrid-api-key"
+  description = "SendGrid API Key"
+  regex = "SG\\.[0-9a-zA-Z_-]{22}\\.[0-9a-zA-Z_-]{43}"
+  tags = ["key", "sendgrid", "email"]
+
+[[rules]]
+  id = "mailgun-api-key"
+  description = "Mailgun API Key"
+  regex = "(?i)(mailgun[_-]?api[_-]?key)[=: ]['\"][a-zA-Z0-9_-]{20,}['\"]"
+  tags = ["key", "mailgun", "email"]
+
+[[rules]]
+  id = "smtp-password"
+  description = "SMTP Password"
+  regex = "(?i)smtp[_-]?(password|pass)[=: ]['\"][^'\"]{8,}['\"]"
+  tags = ["secret", "smtp", "email"]
+
+# =============================================================================
+# RULES - Messaging Services
+# =============================================================================
+
+[[rules]]
+  id = "twilio-api-key"
+  description = "Twilio API Key"
+  regex = "SK[0-9a-fA-F]{32}"
+  tags = ["key", "twilio", "sms"]
+
+[[rules]]
+  id = "telegram-bot-token"
+  description = "Telegram Bot Token"
+  regex = "[0-9]{8,10}:[a-zA-Z0-9_-]{35}"
+  tags = ["key", "telegram", "messaging"]
+
+# =============================================================================
+# RULES - Cloud Platforms
+# =============================================================================
+
+[[rules]]
+  id = "google-api-key"
+  description = "Google API Key"
+  regex = "AIza[0-9A-Za-z_-]{35}"
+  tags = ["key", "google", "cloud"]
+
+[[rules]]
+  id = "google-oauth-token"
+  description = "Google OAuth Token"
+  regex = "[0-9]+-[0-9A-Za-z_]{32}\\.apps\\\\.googleusercontent\\\\.com"
+  tags = ["key", "google", "oauth"]
+
+[[rules]]
+  id = "azure-access-token"
+  description = "Azure Access Token"
+  regex = "(?i)azure[_-]?(access[_-]?token)[=: ]['\"][a-zA-Z0-9+/=_-]{50,}['\"]"
+  tags = ["key", "azure", "cloud"]
+
+# =============================================================================
+# RULES - SSH/PGP Keys
+# =============================================================================
+
+[[rules]]
+  id = "ssh-private-key"
+  description = "SSH Private Key"
+  regex = "-----BEGIN OPENSSH PRIVATE KEY-----"
+  tags = ["key", "ssh", "private"]
+
+[[rules]]
+  id = "pgp-private-key"
+  description = "PGP Private Key"
+  regex = "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+  tags = ["key", "pgp", "private"]
+
+# =============================================================================
+# RULES - Generic High Entropy
+# =============================================================================
+
+[[rules]]
+  id = "high-entropy-string"
+  description = "High Entropy String (>4.5 bits per character)"
+  regex = "(?i)(secret|token|key|auth)[=: ]['\"][a-zA-Z0-9+/=_-]{40,}['\"]"
+  tags = ["secret", "entropy"]
+
+# =============================================================================
+# RULES - Database Connection Strings
+# =============================================================================
+
+[[rules]]
+  id = "mssql-connection-string"
+  description = "Microsoft SQL Server Connection String"
+  regex = "Server=[^;]+;.*Password=[^;]+;"
+  tags = ["secret", "database", "mssql"]
+
+[[rules]]
+  id = "oracle-connection-string"
+  description = "Oracle Connection String"
+  regex = "(?i)(oracle)[^'\"]{0,50}(password|pwd)[=][^'\"]{8,}"
+  tags = ["secret", "database", "oracle"]
