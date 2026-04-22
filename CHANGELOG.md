@@ -9,12 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 2B: Arquitectura - Contratos API ✅ **PENDIENTE**
 - [ ] 2C: Arquitectura - Deploy seguro ✅ **PENDIENTE**
 
-### En proceso
+### Completado
 
 - [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
+- [x] 2B: Arquitectura - Contratos API ✅ **COMPLETADO**
+
+---
+
+## [1.5.0] - 2026-04-23
+
+> **BLOQUE 2B CERRADO** ✅
+> Contratos API formales documentados. Ownership asignado. Schemas nuevos testados.
+
+### Added
+
+#### Fase 2B: Contratos API Ownership ✅
+
+**New Schemas** (`app/schemas/api/`)
+- `common.py` - PaginationParams, ListResponse[T], ErrorResponse, ErrorDetail
+- `auth.py` - LoginIn, RegisterIn, TokenOut, UserOut, OrgOut
+- `employer.py` - EmployerIn, EmployerOut, EmployerListOut
+- `transporter.py` - TransporterIn, TransporterOut, TransporterListOut
+- `residue.py` - ResidueIn, ResidueOut, ResidueListOut
+- `link.py` - LinkIn, LinkOut, LinkListOut
+
+**Documentation** (`docs/contracts/api-contracts.md`)
+- Ownership por dominio asignado
+- Mapa routers/endpoints
+- Ejemplos curl por endpoint
+- RFC 7807 error format
+
+**Tests** (`tests/test_api_schemas.py`)
+- 30 tests para schemas nuevos
+- Validación multi-tenant (organization_id en todos)
+- Pydantic validation tests
+
+**Commits:**
+- `schemas: add API schemas formal contract`
+- `docs: api contracts ownership v1.5.0`
 
 ---
 
@@ -392,7 +426,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[UNRELEASED]: https://github.com/pranely/pranely/compare/v1.4.0...HEAD
+[UNRELEASED]: https://github.com/pranely/pranely/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/pranely/pranely/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/pranely/pranely/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/pranely/pranely/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/pranely/pranely/compare/v1.1.0...v1.2.0
