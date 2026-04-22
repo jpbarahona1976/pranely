@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 1C: CRUD API endpoints ✅ **COMPLETADO**
+- [ ] 2A: Arquitectura - Stack/ADR ✅ **PENDIENTE**
+- [ ] 2B: Arquitectura - Contratos API ✅ **PENDIENTE**
+- [ ] 2C: Arquitectura - Deploy seguro ✅ **PENDIENTE**
 
 ---
 
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > **BLOQUE 1C CERRADO** ✅
 > CRUD API endpoints implementados para Employer, Transporter, Residue, EmployerTransporterLink.
 > Tests de integración con aislamiento multi-tenant verificados. 110 tests passing.
+> Fix Docker: poetry lock regeneration + backend healthy.
 
 ### Added
 
@@ -56,16 +59,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `test_employer_transporter_links_api.py` - 14 tests (CRUD + validaciones)
 
 **Commits:**
-- `feat(1C): add org_deps.py for tenant context`
-- `feat(1C): add employers CRUD router`
-- `feat(1C): add transporters CRUD router`
-- `feat(1C): add residues CRUD router`
-- `feat(1C): add employer-transporter-links CRUD router`
-- `feat(1C): register all routers in main.py`
-- `feat(1C): add employers API tests`
-- `feat(1C): add transporters API tests`
-- `feat(1C): add residues API tests`
-- `feat(1C): add employer-transporter-links API tests`
+- `15efc41` - feat(backend): fase 1C complete
+- `b1ee337` - fix(docker): regenerate lock file and fix backend restart loop
+
+---
+
+### Fixed
+
+#### Fase 1C: Docker Backend Fix ✅
+
+**Problema:** Backend en restart loop por poetry.lock desincronizado con pyproject.toml
+
+**Fixes aplicados:**
+- `packages/backend/Dockerfile` - Añadido `poetry lock --no-update` antes de install
+- `docker-compose.dev.yml` - Comando actualizado con lock regeneration
+- `packages/backend/poetry.lock` - Regenerado para sincronizar dependencias
+- `tests/conftest.py` - Variables entorno para Settings (SECRET_KEY, DATABASE_URL, REDIS_URL)
+- `app/api/deps.py` - HTTPBearer(auto_error=False) para manejo correcto 401
+
+**Evidencia Docker:**
+- Status: healthy (4 servicios up)
+- Healthcheck: HTTP 200 {"status":"ok"}
+- 110 tests passing
 
 ---
 
