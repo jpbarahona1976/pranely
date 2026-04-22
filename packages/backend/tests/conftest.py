@@ -69,3 +69,9 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield ac
     
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def app_client(client: AsyncClient) -> AsyncGenerator[AsyncClient, None]:
+    """Alias for client fixture for test compatibility."""
+    yield client

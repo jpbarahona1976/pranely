@@ -1,0 +1,146 @@
+# =============================================================================
+# PRANELY - Docker Compose Staging
+# Staging: Postgres + Redis + Backend (single deploy, pre-blue-green)
+# =============================================================================
+
+services:
+  # -----------------------------------------------------------------------------
+  # PostgreSQL 16 - Base de datos staging
+  # -----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: pranely-postgres-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pranely
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: pranely_staging
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pranely -d pranely_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - pranely-network-staging
+
+  # -----------------------------------------------------------------------------
+  # Redis 7 - Cache y colas staging
+  # -----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: pranely-redis-staging
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_staging_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pranely-network-staging
+
+  # -----------------------------------------------------------------------------
+  # Backend - FastAPI staging
+  # -----------------------------------------------------------------------------
+  backend:
+    build:
+      context: packages/backend
+      dockerfile: Dockerfile
+    image: pranely-backend:staging
+    container_name: pranely-backend-staging
+    restart: unless-stopped
+    command: sh -c "cd /app && poetry install --no-interaction && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD:-changeme}@postgres:5432/pranely_staging
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: ${SECRET_KEY:-staging-secret-key-for-testing-only}
+      ENV: staging
+      DEBUG: "false"
+      PYTHONPATH: /app
+      LOG_LEVEL: info
+    volumes:
+      - ./packages/backend:/app
+      - backend_logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pranely-network-staging
+
+  # -----------------------------------------------------------------------------
+  # Backend Green (for blue-green testing)
+  # -----------------------------------------------------------------------------
+  backend-green:
+    build:
+      context: packages/backend
+      dockerfile: Dockerfile
+    image: pranely-backend:green
+    container_name: pranely-backend-green
+    restart: unless-stopped
+    command: sh -c "cd /app && poetry install --no-interaction && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8001 --workers 2"
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD:-changeme}@postgres:5432/pranely_staging
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: ${SECRET_KEY:-staging-secret-key-for-testing-only}
+      ENV: staging
+      DEBUG: "false"
+      PYTHONPATH: /app
+      LOG_LEVEL: info
+    volumes:
+      - ./packages/backend:/app
+      - backend_logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pranely-network-staging
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_staging_data:
+    name: pranely-postgres-staging-data
+  redis_staging_data:
+    name: pranely-redis-staging-data
+  backend_logs:
+    name: pranely-backend-staging-logs
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-network-staging:
+    name: pranely-network-staging
+    driver: bridge

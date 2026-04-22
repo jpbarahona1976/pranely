@@ -9,12 +9,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 2C: Arquitectura - Deploy seguro ✅ **PENDIENTE**
+- [ ] 3A: Seguridad - Secretos Remediation
 
 ### Completado
 
+- [x] 2C: Arquitectura - Deploy seguro ✅ **COMPLETADO**
 - [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
 - [x] 2B: Arquitectura - Contratos API ✅ **COMPLETADO**
+
+---
+
+## [1.6.0] - 2026-04-23
+
+> **BLOQUE 2C CERRADO** ✅
+> Deploy seguro implementado. Blue-green strategy, rollback procedures, healthchecks profundos.
+
+### Added
+
+#### Fase 2C: Deploy Seguro ✅
+
+**Documentation** (`docs/deploy/`)
+- `runbook-deploy.md` - Procedimiento completo de despliegue blue-green
+- `healthchecks.md` - Endpoints profundos: /health/db, /health/redis, /health/tenant, /health/deep
+- `rollback-procedures.md` - Estrategias L1/L2/L3 por tipo de incidente
+- `release-cadence.md` - Calendario semanal/bi-weekly con gates de calidad
+
+**Scripts** (`scripts/`)
+- `deploy-staging.sh` - Deploy automatizado con healthchecks y smoke tests
+- `smoke-test.sh` - Suite smoke tests post-deploy
+- `rollback.sh` - Rollback multinivel (L1/L2/L3)
+
+**Infrastructure**
+- `docker-compose.prod.yml` - Blue-green production ready
+- `docker-compose.staging.yml` - Staging environment pre-deploy
+- `.github/workflows/deploy-staging.yml` - CI/CD pipeline staging
+
+**Backend - Health Endpoints** (`app/api/health.py`)
+- GET /api/health - Basic health
+- GET /api/health/db - PostgreSQL connectivity
+- GET /api/health/redis - Redis connectivity
+- GET /api/health/tenant - Tenant isolation verification
+- GET /api/health/deep - Comprehensive health check
+
+**Tests** (`tests/test_health.py`)
+- 11 tests para health endpoints
+- Deep health component verification
+
+**Commits:**
+- `docs: fase 2C deploy documentation`
+- `scripts: deploy/rollback/smoke automation`
+- `docker: staging + prod compose files`
+- `health: add deep healthcheck endpoints`
+- `tests: add health endpoints tests`
 
 ---
 
