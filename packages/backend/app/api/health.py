@@ -75,7 +75,7 @@ async def health_db(response: Response):
     settings = get_settings()
 
     try:
-        async for db in get_db_session():
+        async for db in get_db():
             await db.execute(text("SELECT 1"))
             latency_ms = (time.perf_counter() - start) * 1000
 
@@ -155,7 +155,7 @@ async def health_deep(response: Response):
 
     # Check database
     try:
-        async for db in get_db_session():
+        async for db in get_db():
             await db.execute(text("SELECT 1"))
             db_latency = (time.perf_counter() - start) * 1000
             components["database"] = {

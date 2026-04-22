@@ -6,10 +6,14 @@
 [allowlist]
   description = "PRANELY allowed patterns"
   paths = [
-    '''docs/**''',
-    '''quarantine/**''',
-    '''*.md''',
-    '''LICENSE''',
+    'docs/.*',
+    'quarantine/.*',
+    '.*\\.md',
+    'LICENSE',
+    'packages/backend/tests/.*',
+    '.agents/.*',
+    'PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/.*',
+    '\\.github/.*',
   ]
 
 [[rules]]
