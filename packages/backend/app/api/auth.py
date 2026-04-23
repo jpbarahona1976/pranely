@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.core.security import hash_password, verify_password
 from app.core.tokens import create_access_token
 from app.models import Membership, Organization, User, UserRole
+from app.api.middleware.tenant import get_permissions_for_role
 from app.schemas.auth import (
     AuthResponse,
     LoginRequest,
@@ -86,13 +87,13 @@ async def register(
     "/login",
     response_model=AuthResponse,
     summary="Login user",
-    description="Authenticate user and return JWT token.",
+    description="Authenticate user and return JWT token with org context.",
 )
 async def login(
     request: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> AuthResponse:
-    """Login user and return authentication token."""
+    """Login user and return authentication token with org_id, role, and permissions."""
     # Find user by email
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
@@ -140,17 +141,30 @@ async def login(
     )
     membership = result.scalar_one_or_none()
     
-    # Create access token
-    org_id = membership.organization_id if membership else None
-    access_token = create_access_token(user.id, org_id)
-    
-    # Get organization details
+    # Get org details
     org = None
+    org_id = None
+    role = None
+    permissions = []
+    
     if membership:
+        org_id = membership.organization_id
+        role = membership.role.value if membership.role else UserRole.MEMBER.value
+        permissions = get_permissions_for_role(role)
+        
+        # Get organization details
         result = await db.execute(
-            select(Organization).where(Organization.id == membership.organization_id)
+            select(Organization).where(Organization.id == org_id)
         )
         org = result.scalar_one_or_none()
+    
+    # Create access token with enhanced claims (org_id, role, permissions)
+    access_token = create_access_token(
+        user_id=user.id,
+        org_id=org_id,
+        role=role,
+        permissions=permissions,
+    )
     
     return AuthResponse(
         token=TokenResponse(
