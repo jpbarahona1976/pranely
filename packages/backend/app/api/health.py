@@ -15,7 +15,7 @@ router = APIRouter(prefix="/health", tags=["health"])
 
 class HealthResponse(BaseModel):
     status: str
-    version: str = "1.6.0"
+    version: str = "1.10.0"
     timestamp: str
 
 
@@ -61,7 +61,7 @@ async def health():
     """Basic health check - API is running."""
     return {
         "status": "ok",
-        "version": "1.6.0",
+        "version": "1.10.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -208,6 +208,6 @@ async def health_deep(response: Response):
     return {
         "status": overall_status,
         "components": components,
-        "version": "1.6.0",
+        "version": "1.10.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }

@@ -1,0 +1,111 @@
+# =============================================================================
+# PRANELY - Docker Compose DR (Fase 4C: Backup/DR)
+# Restauración de emergencia desde backups
+# =============================================================================
+
+services:
+  # -----------------------------------------------------------------------------
+  # PostgreSQL DR - Restaurado desde backup
+  # -----------------------------------------------------------------------------
+  postgres-dr:
+    image: postgres:16-alpine
+    container_name: pranely-postgres-dr
+    restart: "no"
+    environment:
+      POSTGRES_USER: pranely
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: pranely_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dr_data:/var/lib/postgresql/data
+      - ./backups/latest:/backups/latest:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pranely -d pranely_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pranely-dr-network
+    profiles:
+      - dr
+
+  # -----------------------------------------------------------------------------
+  # Redis DR - Restaurado desde backup
+  # -----------------------------------------------------------------------------
+  redis-dr:
+    image: redis:7-alpine
+    container_name: pranely-redis-dr
+    restart: "no"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_dr_data:/data
+      - ./backups/latest:/backups/latest:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - pranely-dr-network
+    profiles:
+      - dr
+
+  # -----------------------------------------------------------------------------
+  # Backend DR - Para verificar restore
+  # -----------------------------------------------------------------------------
+  backend-dr:
+    build:
+      context: packages/backend
+      dockerfile: Dockerfile
+    image: pranely-backend:dev
+    container_name: pranely-backend-dr
+    restart: "no"
+    command: sh -c "cd /app && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8001:8000"
+    env_file:
+      - packages/backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pranely:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}@postgres-dr:5432/pranely_dev
+      PYTHONPATH: /app
+    volumes:
+      - ./packages/backend:/app
+      - /app/.venv
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request, urllib.error; urllib.request.urlopen('http://localhost:8000/api/health', timeout=2); print('ok')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      postgres-dr:
+        condition: service_healthy
+      redis-dr:
+        condition: service_healthy
+    networks:
+      - pranely-dr-network
+    profiles:
+      - dr
+
+# =============================================================================
+# Volumes (aislados para DR)
+# =============================================================================
+volumes:
+  postgres_dr_data:
+    name: pranely-postgres-dr-data
+  redis_dr_data:
+    name: pranely-redis-dr-data
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-dr-network:
+    name: pranely-dr-network
+    driver: bridge

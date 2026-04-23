@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "comprehensive-review-full-review": {
+      "source": "rmyndharis/antigravity-skills",
+      "sourceType": "github",
+      "computedHash": "9c8b2f9b0df3de15f8f98eddd0edfebb518d544faa61d14c9fab370874aab1ae"
+    }
+  }
+}

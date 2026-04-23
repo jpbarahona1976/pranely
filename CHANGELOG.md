@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 4B: Migraciones Alembic
 - [ ] 4C: Endpoints CRUD (WasteMovement, Subscription, LegalAlert)
 
 ### Completado
 
+- [x] 4B: Migraciones Alembic formal ✅ **COMPLETADO**
 - [x] 4A: Modelo de datos - Waste/Audit/Billing ✅ **COMPLETADO**
 - [x] 3C: Seguridad - Audit Trails + NOM-151 Compliance ✅ **COMPLETADO**
 - [x] 3B: Seguridad - Authz/multi-tenant Isolation ✅ **COMPLETADO**
@@ -21,6 +21,127 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [x] 2C: Arquitectura - Deploy seguro ✅ **COMPLETADO**
 - [x] 2B: Arquitectura - Contratos API ✅ **COMPLETADO**
 - [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
+
+---
+
+## [1.11.0] - 2026-04-25
+
+> **BLOQUE 4B CERRADO** ✅
+> Migraciones Alembic formales implementadas. Baseline versionado, expand/contract strategy, rollback verificable.
+> **AUDITORÍA: APROBADO LIMPIO** (Claude Sonnet 4.6 + hardening Nemotron)
+> Tests: **277/277 passing**
+
+### Added
+
+#### Fase 4B: Migraciones Alembic formal ✅
+
+**Configuración Alembic** (`packages/backend/alembic.ini`)
+- Configuración formal de Alembic para PostgreSQL 16
+- Logging configurado (root, sqlalchemy, alembic)
+- Handlers: console
+
+**Environment Configuration** (`packages/backend/alembic/env.py`)
+- Soporte async/sync auto-detection (asyncpg + psycopg2)
+- target_metadata desde Base.metadata
+- SQLite compatibility para desarrollo local
+- Database URL desde config o settings
+
+**Template Migration** (`packages/backend/alembic/script.py.mako`)
+- Template con documentación PRANELY
+- Revisión y downgrade reversibles
+
+**Baseline Migration** (`packages/backend/alembic/versions/001_initial_baseline.py`)
+- Crea 13 tablas: organizations, users, memberships, employers, transporters, residues, employer_transporter_links, audit_logs, billing_plans, subscriptions, usage_cycles, legal_alerts, waste_movements
+- Enums como VARCHAR (compatibilidad cross-database)
+- Indices para queries frecuentes
+- Multi-tenancy con organization_id en todas las tablas
+- Foreign keys con CASCADE para org deletion
+- Rollback completo (downgrade)
+
+**CLI Helper** (`packages/backend/scripts/migrate.py`)
+- Comandos: status, upgrade, downgrade, history, branches, current, show, check
+- Seguridad: `gc` (alembic purge) removido - era destructivo
+
+**Verification Script** (`packages/backend/scripts/verify_migrations.py`)
+- Verifica modelos vs migraciones
+- Enum coverage verification
+- Tablas en Base.metadata: 13
+- Enums verificados: 10
+
+**Documentation** (`docs/migrations/alembic-guide.md`)
+- Guía completa de estrategia y comandos
+- Expand/Contract strategy
+- Rollback verification
+- Multi-tenancy notes
+- Troubleshooting
+
+**Versions Directory** (`packages/backend/alembic/versions/README.md`)
+- Documentación del directorio versions
+- Naming convention
+- Estrategia expand/contract
+
+### Fixed
+
+#### Fase 4B: Hardening Correcciones Auditoría ✅
+
+**Corrección 1: RFC test data** (`tests/test_multi_org_isolation.py`)
+- RFC de prueba: 15 chars → 13 chars válidos
+- `RFC-NEW-123456` → `ABCD123456789`
+- Ahora cumple con regex: `^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{2,3}# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [UNRELEASED]
+
+### Próximas tareas
+
+- [ ] 4C: Endpoints CRUD (WasteMovement, Subscription, LegalAlert)
+
+### Completado
+
+- [x] 4B: Migraciones Alembic formal ✅ **COMPLETADO**
+- [x] 4A: Modelo de datos - Waste/Audit/Billing ✅ **COMPLETADO**
+- [x] 3C: Seguridad - Audit Trails + NOM-151 Compliance ✅ **COMPLETADO**
+- [x] 3B: Seguridad - Authz/multi-tenant Isolation ✅ **COMPLETADO**
+- [x] 3A: Seguridad - Secretos Remediation ✅ **COMPLETADO**
+- [x] 2C: Arquitectura - Deploy seguro ✅ **COMPLETADO**
+- [x] 2B: Arquitectura - Contratos API ✅ **COMPLETADO**
+- [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
+
+
+
+**Corrección 2: Root .gitignore** (`.gitignore`)
+- Añadidas entradas completas para .env files:
+  - `.env`, `.env.*`, `.env.local`, `.env.production`, `.env.staging`, `.env.development`
+- Whitelist: `!.env.example`, `!.env.production.example`, `!.env.staging`
+- Sección "Environment files (SECURITY: Never commit secrets)"
+
+**Corrección 3: migrate.py unsafe command** (`packages/backend/scripts/migrate.py`)
+- Comando `gc` (alembic purge) removido
+- Añadido `show <rev>` - muestra detalles de revision
+- Añadido `check` - verifica operaciones pendientes
+- Documentado en Security Note del módulo
+
+### Tests
+
+- **277 tests passing** (zero failures)
+- Tests de migración: upgrade + downgrade verificados
+- Verificación de modelos: 13 tablas alineadas
+- Enum coverage: 10 enums verificados
+
+**Commits:**
+- `config: alembic.ini formal configuration`
+- `env: alembic env.py with async/sync support`
+- `migration: 001_initial_baseline with 13 tables`
+- `scripts: migrate.py CLI helper (safe commands)`
+- `scripts: verify_migrations.py validation`
+- `docs: alembic-guide.md complete documentation`
+- `fix: rfc test data 13 chars valid format`
+- `fix: root .gitignore complete .env coverage`
+- `fix: migrate.py remove unsafe gc command`
 
 ---
 
@@ -809,8 +930,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[UNRELEASED]: https://github.com/pranely/pranely/compare/v1.5.0...HEAD
-[1.5.0]: https://github.com/pranely/pranely/compare/v1.4.0...v1.5.0
+[UNRELEASED]: https://github.com/pranely/pranely/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/pranely/pranely/compare/v1.10.0...v1.11.0
+[1.10.0]: https://github.com/pranely/pranely/compare/v1.9.0...v1.10.0
 [1.4.0]: https://github.com/pranely/pranely/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/pranely/pranely/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/pranely/pranely/compare/v1.1.0...v1.2.0
