@@ -1,0 +1,197 @@
+# PRANELY Logging Configuration - NOM-151 Compliance
+# YAML configuration for Python logging with structured output
+
+version: 1
+disable_existing_loggers: false
+
+# Formatters
+formatters:
+  # JSON structured formatter for production
+  json:
+    class: app.core.logging.StructuredLogFormatter
+    redact_pii: true
+    include_stack_trace: true
+  
+  # Plain text for development
+  simple:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  # Detailed for debugging
+  detailed:
+    format: '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+# Handlers
+handlers:
+  # Console output (stdout)
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: json
+    stream: ext://sys.stdout
+  
+  # Audit trail file handler (100MB rotation)
+  audit_file:
+    class: logging.handlers.RotatingFileHandler
+    level: AUDIT
+    formatter: json
+    filename: /app/logs/audit.json
+    maxBytes: 104857600  # 100MB
+    backupCount: 10
+    encoding: utf-8
+  
+  # Security events file handler (50MB rotation)
+  security_file:
+    class: logging.handlers.RotatingFileHandler
+    level: WARNING
+    formatter: json
+    filename: /app/logs/security.json
+    maxBytes: 52428800  # 50MB
+    backupCount: 5
+    encoding: utf-8
+  
+  # Application logs (50MB rotation)
+  app_file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: json
+    filename: /app/logs/app.json
+    maxBytes: 52428800
+    backupCount: 7
+    encoding: utf-8
+
+# Loggers
+loggers:
+  # Main application logger
+  pranely:
+    level: INFO
+    handlers:
+      - console
+      - app_file
+    propagate: false
+  
+  # Audit-specific logger (NOM-151 compliance)
+  pranely.audit:
+    level: AUDIT
+    handlers:
+      - audit_file
+      - console
+    propagate: false
+  
+  # Security events logger
+  pranely.security:
+    level: WARNING
+    handlers:
+      - security_file
+      - console
+    propagate: false
+  
+  # Database query logger
+  pranely.db:
+    level: WARNING
+    handlers:
+      - app_file
+    propagate: false
+  
+  # API endpoints logger
+  pranely.api:
+    level: INFO
+    handlers:
+      - console
+      - app_file
+    propagate: false
+  
+  # Third-party integrations
+  pranely.integrations:
+    level: INFO
+    handlers:
+      - console
+      - app_file
+    propagate: false
+
+# Root logger
+root:
+  level: WARNING
+  handlers:
+    - console
+
+# Third-party loggers (reduce noise)
+suppressors:
+  uvicorn:
+    level: INFO
+  uvicorn.access:
+    level: WARNING
+  werkzeug:
+    level: WARNING
+  sqlalchemy.engine:
+    level: WARNING
+  sqlalchemy.pool:
+    level: WARNING
+
+# ================================================================
+# Environment-specific overrides
+# ========================================
+
+# Development
+development:
+  pranely:
+    level: DEBUG
+  suppressors:
+    uvicorn.access:
+      level: DEBUG
+
+# Staging
+staging:
+  pranely:
+    level: INFO
+  pranely.audit:
+    level: INFO
+
+# Production
+production:
+  pranely:
+    level: INFO
+  app_file:
+    level: WARNING  # Reduce file logging in prod
+  audit_file:
+    level: AUDIT     # Always log audit events
+
+# ================================================================
+# NOM-151 Specific Configuration
+# ========================================
+
+nom151:
+  # PII fields to redact in all logs
+  pii_fields:
+    - password
+    - hashed_password
+    - secret
+    - token
+    - api_key
+    - authorization
+    - credential
+    - private_key
+    - credit_card
+    - card_number
+    - cvv
+    - ssn
+  
+  # Retention periods (in days)
+  retention:
+    audit_trail: 1825  # 5 years NOM-151 requirement
+    app_logs: 365
+    security_logs: 1825  # 5 years
+    access_logs: 365
+  
+  # Correlation settings
+  correlation:
+    enabled: true
+    header_name: X-Correlation-ID
+    auto_generate: true
+  
+  # Data residency (Mexico)
+  data_residency:
+    region: mx-central-1
+    timezone: America/Mexico_City
+    locale: es_MX.UTF-8

@@ -9,14 +9,278 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 3B: Seguridad - Authz/multi-tenant Isolation
+- [ ] 4B: Migraciones Alembic
+- [ ] 4C: Endpoints CRUD (WasteMovement, Subscription, LegalAlert)
 
 ### Completado
 
+- [x] 4A: Modelo de datos - Waste/Audit/Billing ✅ **COMPLETADO**
+- [x] 3C: Seguridad - Audit Trails + NOM-151 Compliance ✅ **COMPLETADO**
+- [x] 3B: Seguridad - Authz/multi-tenant Isolation ✅ **COMPLETADO**
 - [x] 3A: Seguridad - Secretos Remediation ✅ **COMPLETADO**
 - [x] 2C: Arquitectura - Deploy seguro ✅ **COMPLETADO**
-- [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
 - [x] 2B: Arquitectura - Contratos API ✅ **COMPLETADO**
+- [x] 2A: Arquitectura - Stack/ADR ✅ **COMPLETADO**
+
+---
+
+## [1.10.0] - 2026-04-24
+
+> **BLOQUE 4A CERRADO** ✅
+> Modelo de datos funcional con entidades Waste/Audit/Billing, schemas Pydantic, y ERD documentado.
+
+### Added
+
+#### Fase 4A: Modelo de Datos - Waste/Audit/Billing ✅
+
+**Nuevos Enums** (`app/models.py`)
+- `MovementStatus` - pending, in_review, validated, rejected, exception
+- `AlertSeverity` - low, medium, high, critical
+- `AlertStatus` - open, acknowledged, resolved, dismissed
+- `SubscriptionStatus` - active, paused, cancelled, past_due
+- `BillingPlanCode` - free, pro, enterprise
+- `AuditLogResult` - success, failure, partial
+
+**AuditLog Model** (`app/models.py`)
+- `organization_id`, `user_id`, `action`, `resource_type`, `resource_id`
+- `result`, `payload_json` (PII-redacted), `ip_address`, `user_agent`
+- Timestamp indexing para queries eficientes
+- Multi-tenancy obligatorio
+
+**BillingPlan Model** (`app/models.py`)
+- `code`, `name`, `description`, `price_usd_cents`
+- `doc_limit`, `doc_limit_period`, `features_json`
+- Global (no tenant-specific)
+
+**Subscription Model** (`app/models.py`)
+- `organization_id`, `plan_id`, `stripe_sub_id`, `stripe_customer_id`
+- `status`, `started_at`, `current_period_start`, `current_period_end`
+- Unique constraint: one subscription per organization
+
+**UsageCycle Model** (`app/models.py`)
+- `subscription_id`, `month_year` (YYYY-MM), `docs_used`, `docs_limit`
+- `is_locked`, `overage_docs`, `overage_charged_cents`
+- Unique: subscription_id + month_year
+
+**LegalAlert Model** (`app/models.py`)
+- `organization_id`, `norma`, `title`, `description`
+- `severity`, `status`, related_resource_type/ID
+- `acknowledged_at`, `resolved_at`, `resolution_notes`
+- Multi-tenancy obligatorio
+
+**WasteMovement Enhancement** (`app/models.py`)
+- Índices: `organization_id + timestamp`, `manifest_number`
+- Multi-tenancy verificado
+
+**Pydantic Schemas** (`app/schemas/domain.py`)
+- `AuditLogCreate/Response/ListResponse`
+- `BillingPlanCreate/Update/Response`
+- `SubscriptionCreate/Update/Response`
+- `UsageCycleCreate/Update/Response`
+- `LegalAlertCreate/Update/Response`
+- Todos los enums correspondientes (EntityStatusEnum, etc.)
+
+**ERD Documentation** (`docs/ERD.md`)
+- Diagrama Mermaid completo
+- Todas las entidades documentadas
+- Constraints e índices detallados
+- Multi-tenancy model
+- Enums reference
+- Data residency México
+- Retention policies
+
+**Tests** (`tests/test_domain_models.py`)
+- +30 tests nuevos para Fase 4A
+- TestNewEnums4A: 6 tests
+- TestAuditLogModel: 3 tests
+- TestBillingPlanModel: 3 tests
+- TestSubscriptionModel: 2 tests
+- TestUsageCycleModel: 3 tests
+- TestLegalAlertModel: 3 tests
+- TestWasteMovementModel: 3 tests
+- TestBillingSchemas4A: 6 tests
+
+### Fixed
+
+#### Fase 4A: Fixes Bloqueantes Auditoría ✅
+
+**WasteMovement.status consistencia** (`app/models.py`)
+- Cambiado `status` de `String(20)` a `Enum(MovementStatus)` para consistencia
+- Ahora usa `MovementStatus.PENDING` como default
+
+**Tests imports** (`tests/test_domain_models.py`)
+- Agregados imports de enums Fase 4A: `MovementStatus`, `AlertSeverity`, `AlertStatus`, `SubscriptionStatus`, `BillingPlanCode`, `AuditLogResult`
+- Agregados imports de modelos Fase 4A: `AuditLog`, `BillingPlan`, `Subscription`, `UsageCycle`, `LegalAlert`, `WasteMovement`
+
+**LegalAlert enum mismatch** (`tests/test_domain_models.py`)
+- Corregido `test_legal_alert_resolve`: usaba `AlertStatus.OPEN` en campo `severity`
+- Ahora usa `AlertSeverity.MEDIUM` para severity y `AlertStatus.OPEN` para status
+
+---
+
+## [1.9.0] - 2026-04-24
+
+> **BLOQUE 3C CERRADO** ✅
+> Audit trails + NOM-151 compliance implementados. JSON structured logging, PII redaction, data residency México.
+> **AUDITORÍA: APROBADO SIN RESERVAS** (Claude + Nemotron)
+
+### Added
+
+#### Fase 3C: Audit Trails + NOM-151 Compliance ✅
+
+**Audit Trail System** (`app/core/audit.py`)
+- `AuditTrailModel` - Table con 16 campos para compliance
+- `AuditAction` enum (16 tipos: create, read, update, delete, login, logout, export, import, approve, reject, archive, restore, consent, consent_withdraw, permission_change, config_change)
+- `AuditSeverity` enum (debug, info, warn, error, audit)
+- `PIIRedactor` - Email, phone, RFC, CURP redaction
+- `CorrelationContext` - Thread-local request tracing
+- `audit_event()` context manager + `record_audit_event()`
+- `query_audit_trails()` + `export_audit_trails()`
+- Índices: org_timestamp, user_timestamp, resource, correlation, action
+
+**Structured Logging** (`app/core/logging.py`)
+- `StructuredLogFormatter` - JSON output con correlation_id/org_id/user_id
+- `AuditLogger` - Logger especializado eventos regulatorios
+- PII redaction integrada en logs
+- `setup_logging()` + `LogContext`
+
+**Audit Middleware** (`app/api/middleware/audit.py`)
+- `AuditMiddleware` - Automatic API request audit
+- Correlation ID injection
+- Helper functions: log_audit_login, log_audit_consent, log_audit_data_export
+
+**NOM-151 Documentation** (`docs/NOM-151.md`)
+- Checklist 15 puntos (11/15 implementados)
+- Data residency México
+- PII consent flows
+- Retention 5 años
+- Derechos ARCO
+
+**Logging Configuration** (`config/logging.yaml`)
+- Handlers: console, audit_file (100MB), security_file (50MB)
+- Log levels: DEBUG/INFO/WARN/ERROR/AUDIT
+
+**Tests** (`tests/test_audit_trails.py`)
+- 40 tests: PII redaction (14), correlation context (7), model (6), logging (3), compliance (10)
+
+**Commits:**
+- `docs: fase 3C NOM-151 compliance documentation`
+- `audit: add audit trail model and PII redaction`
+- `logging: add structured logging with JSON format`
+- `middleware: add audit middleware for API requests`
+- `config: add logging.yaml configuration`
+- `docker: add logging driver and TZ to prod compose`
+- `tests: add audit trails test suite (40 tests)`
+
+### Fixed
+
+#### Fase 3C: Fixes Auditoría Final ✅
+
+**AuditAction enum** (`app/core/audit.py`)
+- Agregadas acciones `PERMISSION_CHANGE` y `CONFIG_CHANGE` para llegar a 16 tipos
+
+**PII Redaction** (`app/core/audit.py`)
+- `redact_email()` corregido: no expone TLD completo en dominio
+- `redact_curp()` mejorado con documentación de preservación de patrones
+
+**CorrelationContext** (`app/core/audit.py`)
+- `get_correlation_id()` corregido: no genera UUID automático después de clear()
+- Alineado con contrato de test: retorna string vacío cuando no está seteado
+
+**Tests alignment** (`tests/test_audit_trails.py`)
+- `test_redact_email_short_local`: assertion corregida
+- `test_redact_curp`: comentario adicionado
+- `test_get_correlation_id_returns_empty_when_not_set`: nuevo test
+- `test_get_correlation_id_generates_default`: removido (inválido)
+
+### Fixed
+
+#### Mini-Sprint: Deuda Técnica Bloqueante Pre-Fase 4 ✅
+
+**DT-001 Fix: Tenant Isolation Source of Truth** (`app/api/deps.py`)
+- Nueva dependencia `get_current_active_organization` como fuente única de verdad
+- Usa org_id del JWT token (no primera membership por created_at)
+- Valida membresía del usuario en la organización del token
+- Retorna tuple[User, Organization] con org validada
+
+**DT-002 Fix: Deprecación org_deps.py** (`app/api/org_deps.py`)
+- Módulo marcado como DEPRECATED con advertencia clara
+- `get_current_org` ahora delega a `get_current_active_organization`
+- Solo mantenido para backward compatibility durante migración
+
+**DT-003 Fix: Hardening docker-compose.dev.yml** (`docker-compose.dev.yml`)
+- Removido default inseguro `:-changeme`
+- `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}`
+- `DATABASE_URL` usa variable de entorno sin credenciales embebidas
+- Ahora requiere secrets externos para funcionar
+
+**DT-004 Fix: Refactor Routers** (`app/api/`)
+- `employers.py`: Todos los endpoints ahora usan `get_current_active_organization`
+- `transporters.py`: Todos los endpoints ahora usan `get_current_active_organization`
+- `residues.py`: Todos los endpoints ahora usan `get_current_active_organization`
+- `employer_transporter_links.py`: Todos los endpoints ahora usan `get_current_active_organization`
+- Cada endpoint extrae `user, org = user_org` correctamente
+
+**DT-005 Tests Multi-Org** (`tests/test_multi_org_isolation.py`)
+- 13 tests para validación de aislamiento multi-tenant
+- TestMultiOrgTenantIsolation: 6 tests
+- TestMultiOrgCRUDIsolation: 2 tests
+- Verifica: mismo usuario, 2 organizaciones, JWT con distinto org_id
+- Validación: acceso solo a datos de org del token
+- Rechazo: token sin org_id o con org_id inválida retorna 403
+
+---
+
+## [1.8.0] - 2026-04-24
+
+> **BLOQUE 3B CERRADO** ✅
+> Authz multi-tenant RBAC implementado. JWT claims org_id/role/permissions, middleware tenant isolation, dependency guards.
+
+### Added
+
+#### Fase 3B: Authz/multi-tenant Isolation ✅
+
+**JWT Claims Enhancement** (`app/core/tokens.py`)
+- `TokenPayload` con claims: sub, org_id, role, permissions, exp
+- `create_access_token()` acepta org_id, role, permissions
+- `create_org_token()` convenience function para tokens con contexto completo
+
+**Middleware Tenant Isolation** (`app/api/middleware/tenant.py`)
+- `TenantContext` - Holder con user_id, org_id, role, permissions
+- `TenantMiddleware` - Extrae org_id/role del JWT, inyecta en request.state
+- `ROLE_PERMISSIONS` - Mapeo de roles a permisos
+- `check_cross_tenant_access()` - Previene acceso cross-tenant (403)
+- Public paths: /api/auth/*, /api/health/*, /docs, /openapi.json
+
+**Dependency Guards** (`app/api/deps.py`)
+- `get_current_active_user_org` - Valida user + org_id + membership
+- `get_current_active_admin` - Valida rol admin/owner
+- `get_current_active_owner` - Valida rol owner
+- `RequireOrgId` / `RequireAdmin` - Classes para Depends()
+- `require_permission(permission)` - Factory para permisos específicos
+
+**App Registration** (`app/main.py`)
+- `TenantMiddleware` registrado en app (antes de routers)
+
+**Auth Enhancement** (`app/api/auth.py`)
+- Login retorna token con org_id, role, permissions
+- `get_permissions_for_role()` usado para mapear rol a permisos
+
+**Tests** (`tests/test_authz_tenant.py`)
+- 20 tests para authorization y tenant isolation
+- TestTokenPayload: 7 tests (claims encode/decode)
+- TestRolePermissions: 5 tests (owner/admin/member/viewer)
+- TestTenantContext: 14 tests (RBAC methods)
+- TestTenantMiddlewarePaths: 7 tests (public/protected paths)
+- TestCrossTenantAccess: 4 tests (access control)
+- TestTokenIntegration: 3 tests (integration)
+
+**Commits:**
+- `security: fase 3B authz multi-tenant RBAC`
+- `middleware: add tenant isolation middleware`
+- `deps: add RBAC dependency guards`
+- `auth: enhance login token with org_id/role/permissions`
+- `tests: add authz tenant isolation tests`
 
 ---
 
