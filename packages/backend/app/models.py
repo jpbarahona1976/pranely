@@ -4,7 +4,7 @@ from typing import List, Optional
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
-    Boolean, DateTime, Enum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint
+    Boolean, DateTime, Enum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint, Text
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -51,8 +51,60 @@ class WasteStatus(PyEnum):
     ARCHIVED = "archived"
 
 
+# Enums adicionales para nuevas entidades (moved up to be available for WasteMovement)
+class MovementStatus(PyEnum):
+    """Status for waste movements (NOM-052 compliance)."""
+    PENDING = "pending"
+    IN_REVIEW = "in_review"
+    VALIDATED = "validated"
+    REJECTED = "rejected"
+    EXCEPTION = "exception"
+
+
+class AlertSeverity(PyEnum):
+    """Severity levels for legal alerts."""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class AlertStatus(PyEnum):
+    """Status for legal alerts."""
+    OPEN = "open"
+    ACKNOWLEDGED = "acknowledged"
+    RESOLVED = "resolved"
+    DISMISSED = "dismissed"
+
+
+class SubscriptionStatus(PyEnum):
+    """Subscription status for billing."""
+    ACTIVE = "active"
+    PAUSED = "paused"
+    CANCELLED = "cancelled"
+    PAST_DUE = "past_due"
+
+
+class BillingPlanCode(PyEnum):
+    """Billing plan codes."""
+    FREE = "free"
+    PRO = "pro"
+    ENTERPRISE = "enterprise"
+
+
+class AuditLogResult(PyEnum):
+    """Result of audited operations."""
+    SUCCESS = "success"
+    FAILURE = "failure"
+    PARTIAL = "partial"
+
+
 class Organization(Base):
-    """Organization/Tenant entity for multi-tenancy."""
+    """
+    Organization entity (Tenant).
+    
+    All system data is partitioned by organization_id.
+    """
     __tablename__ = "organizations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -73,9 +125,6 @@ class Organization(Base):
     memberships: Mapped[List["Membership"]] = relationship(
         "Membership", back_populates="organization", cascade="all, delete-orphan"
     )
-    waste_movements: Mapped[List["WasteMovement"]] = relationship(
-        "WasteMovement", back_populates="organization"
-    )
     employers: Mapped[List["Employer"]] = relationship(
         "Employer", back_populates="organization", cascade="all, delete-orphan"
     )
@@ -91,14 +140,16 @@ class Organization(Base):
 
 
 class User(Base):
-    """User entity for authentication."""
+    """
+    User entity for authentication.
+    """
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    locale: Mapped[str] = mapped_column(String(10), default="es")  # es/en
+    locale: Mapped[str] = mapped_column(String(10), default="es")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
@@ -117,18 +168,24 @@ class User(Base):
 
 
 class Membership(Base):
-    """Membership linking users to organizations with roles."""
+    """
+    Link between User and Organization with a specific role.
+    """
     __tablename__ = "memberships"
     __table_args__ = (
-        UniqueConstraint("user_id", "organization_id", name="uq_user_org"),
+        UniqueConstraint("user_id", "organization_id", name="uq_membership_user_org"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
     organization_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("organizations.id"), nullable=False
     )
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.MEMBER)
+    role: Mapped["UserRole"] = mapped_column(
+        Enum(UserRole), default=UserRole.MEMBER, nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )
@@ -138,42 +195,11 @@ class Membership(Base):
     organization: Mapped["Organization"] = relationship("Organization", back_populates="memberships")
 
     def __repr__(self) -> str:
-        return f"<Membership(user_id={self.user_id}, org_id={self.organization_id}, role={self.role})>"
+        return f"<Membership(user={self.user_id}, org={self.organization_id}, role={self.role.value})>"
 
 
-class WasteMovement(Base):
-    """Waste movement entity for tracking."""
-    __tablename__ = "waste_movements"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    organization_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("organizations.id"), nullable=False
-    )
-    manifest_number: Mapped[str] = mapped_column(String(100), nullable=False)
-    movement_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    quantity: Mapped[Optional[float]] = mapped_column(nullable=True)
-    unit: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    confidence_score: Mapped[Optional[float]] = mapped_column(nullable=True)
-    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, inreview, validated, exception, rejected
-    is_immutable: Mapped[bool] = mapped_column(Boolean, default=False)
-    archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    orig_filename: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=_utcnow
-    )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True, onupdate=_utcnow
-    )
-
-    # Relationships
-    organization: Mapped["Organization"] = relationship("Organization", back_populates="waste_movements")
-
-    def __repr__(self) -> str:
-        return f"<WasteMovement(id={self.id}, manifest='{self.manifest_number}')>"
-
-
+# =============================================================================
+# FASE 1B: Modelos de dominio - Employer, Residue, Transporter
 # =============================================================================
 # FASE 1B: Modelos de dominio - Employer, Residue, Transporter
 # =============================================================================
@@ -435,3 +461,367 @@ class EmployerTransporterLink(Base):
 # =============================================================================
 # Note: Organization relationships are now defined directly in the Organization class
 # for better clarity and to avoid class attribute reassignment issues.
+
+
+# =============================================================================
+# FASE 4A: Modelo de Datos - Waste/Audit/Billing
+# =============================================================================
+
+
+# =============================================================================
+# AuditLog Model
+# =============================================================================
+
+
+class AuditLog(Base):
+    """
+    Audit log for regulatory compliance (NOM-151).
+    
+    Stores audit events with PII redaction support and 5-year retention.
+    This is a simplified version for quick queries; detailed audit is in AuditTrail.
+    
+    Multi-tenancy: organization_id REQUIRED for all queries.
+    LFPDPPP: PII should be redacted in payload_json.
+    """
+    __tablename__ = "audit_logs"
+    __table_args__ = (
+        Index("ix_audit_log_org_timestamp", "organization_id", "timestamp"),
+        Index("ix_audit_log_user_timestamp", "user_id", "timestamp"),
+        Index("ix_audit_log_resource", "resource_type", "resource_id"),
+        UniqueConstraint("id", name="uq_audit_log_id"),
+    )
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False
+    )
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    result: Mapped[AuditLogResult] = mapped_column(
+        Enum(AuditLogResult), default=AuditLogResult.SUCCESS
+    )
+    # PII-redacted payload (use PIIRedactor before storing)
+    payload_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Retention: 5 years for NOM-151 compliance
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False, index=True
+    )
+    
+    # Relationships
+    organization: Mapped["Organization"] = relationship("Organization")
+    
+    def __repr__(self) -> str:
+        return f"<AuditLog(id={self.id}, action='{self.action}', org={self.organization_id})>"
+
+
+# =============================================================================
+# BillingPlan Model
+# =============================================================================
+
+
+class BillingPlan(Base):
+    """
+    Billing plan definition.
+    
+    Defines available subscription plans with pricing and limits.
+    Plans are global (not tenant-specific).
+    """
+    __tablename__ = "billing_plans"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[BillingPlanCode] = mapped_column(
+        Enum(BillingPlanCode), unique=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    # Pricing (USD cents for precision)
+    price_usd_cents: Mapped[int] = mapped_column(Integer, default=0)
+    # Document limits
+    doc_limit: Mapped[int] = mapped_column(Integer, default=100)  # 0 = unlimited
+    doc_limit_period: Mapped[str] = mapped_column(String(20), default="monthly")
+    # Feature flags
+    features_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Status
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=_utcnow
+    )
+    
+    # Relationships
+    subscriptions: Mapped[List["Subscription"]] = relationship(
+        "Subscription", back_populates="plan"
+    )
+    
+    def __repr__(self) -> str:
+        return f"<BillingPlan(code='{self.code.value}', name='{self.name}')>"
+
+
+# =============================================================================
+# Subscription Model
+# =============================================================================
+
+
+class Subscription(Base):
+    """
+    Organization subscription to a billing plan.
+    
+    Links an organization to a billing plan with Stripe integration.
+    
+    Multi-tenancy: organization_id REQUIRED.
+    """
+    __tablename__ = "subscriptions"
+    __table_args__ = (
+        UniqueConstraint("organization_id", name="uq_subscription_org"),
+        Index("ix_subscription_status", "status"),
+    )
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False, unique=True
+    )
+    plan_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("billing_plans.id"), nullable=False
+    )
+    # Stripe integration
+    stripe_sub_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, unique=True)
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Subscription status
+    status: Mapped[SubscriptionStatus] = mapped_column(
+        Enum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE
+    )
+    # Billing dates
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    current_period_start: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    current_period_end: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Metadata
+    metadata_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=_utcnow
+    )
+    
+    # Relationships
+    organization: Mapped["Organization"] = relationship(
+        "Organization", back_populates="subscription"
+    )
+    plan: Mapped["BillingPlan"] = relationship(
+        "BillingPlan", back_populates="subscriptions"
+    )
+    usage_cycles: Mapped[List["UsageCycle"]] = relationship(
+        "UsageCycle", back_populates="subscription", cascade="all, delete-orphan"
+    )
+    
+    def __repr__(self) -> str:
+        return f"<Subscription(org={self.organization_id}, plan={self.plan_id}, status={self.status.value})>"
+
+
+# =============================================================================
+# UsageCycle Model
+# =============================================================================
+
+
+class UsageCycle(Base):
+    """
+    Monthly usage tracking for subscription billing.
+    
+    Tracks document usage per billing cycle to enforce plan limits.
+    
+    Multi-tenancy: organization_id via subscription relationship.
+    """
+    __tablename__ = "usage_cycles"
+    __table_args__ = (
+        UniqueConstraint("subscription_id", "month_year", name="uq_usage_cycle_sub_month"),
+        Index("ix_usage_cycle_month", "month_year"),
+    )
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    subscription_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("subscriptions.id"), nullable=False
+    )
+    # Period (YYYY-MM format)
+    month_year: Mapped[str] = mapped_column(String(7), nullable=False)
+    # Usage tracking
+    docs_used: Mapped[int] = mapped_column(Integer, default=0)
+    docs_limit: Mapped[int] = mapped_column(Integer, default=100)
+    # Lock state (once period ends, no more changes)
+    is_locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Billing info
+    overage_docs: Mapped[int] = mapped_column(Integer, default=0)  # Docs over limit
+    overage_charged_cents: Mapped[int] = mapped_column(Integer, default=0)
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=_utcnow
+    )
+    
+    # Relationships
+    subscription: Mapped["Subscription"] = relationship(
+        "Subscription", back_populates="usage_cycles"
+    )
+    
+    def __repr__(self) -> str:
+        return f"<UsageCycle(sub={self.subscription_id}, period={self.month_year}, used={self.docs_used})>"
+
+
+# =============================================================================
+# LegalAlert Model
+# =============================================================================
+
+
+class LegalAlert(Base):
+    """
+    Legal and regulatory alerts for compliance.
+    
+    Tracks NOM-052/SEMARNAT and other regulatory requirements.
+    
+    Multi-tenancy: organization_id REQUIRED.
+    """
+    __tablename__ = "legal_alerts"
+    __table_args__ = (
+        Index("ix_legal_alert_org_status", "organization_id", "status"),
+        Index("ix_legal_alert_severity", "severity"),
+    )
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False
+    )
+    # Alert identification
+    norma: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., NOM-052, LFPDPPP
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
+    # Severity and status
+    severity: Mapped[AlertSeverity] = mapped_column(
+        Enum(AlertSeverity), default=AlertSeverity.MEDIUM
+    )
+    status: Mapped[AlertStatus] = mapped_column(
+        Enum(AlertStatus), default=AlertStatus.OPEN
+    )
+    # Related entities (for context)
+    related_resource_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    related_resource_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    # Resolution tracking
+    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    resolution_notes: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    # Metadata
+    metadata_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=_utcnow
+    )
+    
+    # Relationships
+    organization: Mapped["Organization"] = relationship("Organization")
+    
+    def __repr__(self) -> str:
+        return f"<LegalAlert(id={self.id}, norma='{self.norma}', severity={self.severity.value})>"
+
+
+class WasteMovement(Base):
+    """
+    Waste movement/manifest entity for NOM-052 compliance.
+    
+    Tracks the physical movement of waste from generator to disposal.
+    
+    Multi-tenancy: organization_id REQUIRED.
+    """
+    __tablename__ = "waste_movements"
+    __table_args__ = (
+        Index("ix_waste_movement_org_timestamp", "organization_id", "created_at"),
+        Index("ix_waste_movement_manifest", "manifest_number"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False
+    )
+    # Manifest details
+    manifest_number: Mapped[str] = mapped_column(String(100), nullable=False)
+    movement_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    # Measurement
+    quantity: Mapped[Optional[float]] = mapped_column(nullable=True)
+    unit: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    # Date of movement
+    date: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # AI Metadata
+    confidence_score: Mapped[Optional[float]] = mapped_column(nullable=True)
+    # Status
+    status: Mapped[MovementStatus] = mapped_column(
+        Enum(MovementStatus), default=MovementStatus.PENDING, nullable=False
+    )
+    # Controls
+    is_immutable: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    archived_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # File storage
+    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    orig_filename: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=_utcnow
+    )
+
+    # Relationships
+    organization: Mapped["Organization"] = relationship("Organization", back_populates="movements")
+
+    def __repr__(self) -> str:
+        return f"<WasteMovement(id={self.id}, manifest='{self.manifest_number}', status={self.status.value})>"
+
+
+# =============================================================================
+# Add new relationships to Organization
+# =============================================================================
+
+# Add subscription relationship to Organization
+Organization.subscription = relationship(
+    "Subscription", back_populates="organization", uselist=False
+)
+
+# Add audit_logs relationship to Organization
+Organization.audit_logs = relationship(
+    "AuditLog", back_populates="organization", cascade="all, delete-orphan"
+)
+
+# Add legal_alerts relationship to Organization
+Organization.legal_alerts = relationship(
+    "LegalAlert", back_populates="organization", cascade="all, delete-orphan"
+)
+
+# Add movements relationship to Organization
+Organization.movements = relationship(
+    "WasteMovement", back_populates="organization", cascade="all, delete-orphan"
+)

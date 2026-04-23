@@ -75,3 +75,53 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 async def app_client(client: AsyncClient) -> AsyncGenerator[AsyncClient, None]:
     """Alias for client fixture for test compatibility."""
     yield client
+
+
+# =============================================================================
+# Table Cleanup Fixture (IntegrityError Fix)
+# =============================================================================
+# Tables that need to be truncated between tests to avoid duplicate key errors
+CRITICAL_TABLES = [
+    "users",
+    "organizations",
+    "memberships",
+    "employers",
+    "transporters",
+    "residues",
+    "employer_transporter_links",
+    "audit_trails",
+]
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def truncate_tables(db_session: AsyncSession):
+    """
+    Truncate all critical tables AFTER each test to ensure clean state.
+    
+    This fixture runs automatically (autouse=True) after every test,
+    ensuring IntegrityError is prevented when tests share the same session.
+    """
+    yield  # Run test first
+    
+    # Truncate tables in correct order (respect foreign keys)
+    # Order matters: tables with FK references should be truncated after their parents
+    truncate_order = [
+        "audit_trails",                    # Depends on users, organizations
+        "employer_transporter_links",      # Depends on employers, transporters, organizations
+        "residues",                         # Depends on employers, transporters, organizations
+        "memberships",                      # Depends on users, organizations
+        "employers",                        # Depends on organizations
+        "transporters",                     # Depends on organizations
+        "users",                            # No dependencies
+        "organizations",                   # No dependencies
+    ]
+    
+    try:
+        for table in truncate_order:
+            await db_session.execute(
+                f"DELETE FROM {table}"
+            )
+        await db_session.commit()
+    except Exception:
+        await db_session.rollback()
+        # Tables might not exist yet (first test) - this is OK

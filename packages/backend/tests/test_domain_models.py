@@ -17,6 +17,20 @@ from app.models import (
     User,
     Membership,
     UserRole,
+    # Fase 4A enums
+    MovementStatus,
+    AlertSeverity,
+    AlertStatus,
+    SubscriptionStatus,
+    BillingPlanCode,
+    AuditLogResult,
+    # Fase 4A models
+    AuditLog,
+    BillingPlan,
+    Subscription,
+    UsageCycle,
+    LegalAlert,
+    WasteMovement,
 )
 
 
@@ -857,3 +871,586 @@ class TestRFCWithEnye:
             address="Test Address",
         )
         assert data.rfc == "A&B240125HHH"
+
+
+# =============================================================================
+# FASE 4A: Waste/Audit/Billing Tests
+# =============================================================================
+
+
+class TestNewEnums4A:
+    """Tests for new enums added in Phase 4A."""
+
+    def test_movement_status_values(self):
+        """Test MovementStatus enum has correct values."""
+        from app.models import MovementStatus
+        
+        assert MovementStatus.PENDING.value == "pending"
+        assert MovementStatus.IN_REVIEW.value == "in_review"
+        assert MovementStatus.VALIDATED.value == "validated"
+        assert MovementStatus.REJECTED.value == "rejected"
+        assert MovementStatus.EXCEPTION.value == "exception"
+        assert len(MovementStatus) == 5
+
+    def test_alert_severity_values(self):
+        """Test AlertSeverity enum has correct values."""
+        from app.models import AlertSeverity
+        
+        assert AlertSeverity.LOW.value == "low"
+        assert AlertSeverity.MEDIUM.value == "medium"
+        assert AlertSeverity.HIGH.value == "high"
+        assert AlertSeverity.CRITICAL.value == "critical"
+        assert len(AlertSeverity) == 4
+
+    def test_alert_status_values(self):
+        """Test AlertStatus enum has correct values."""
+        from app.models import AlertStatus
+        
+        assert AlertStatus.OPEN.value == "open"
+        assert AlertStatus.ACKNOWLEDGED.value == "acknowledged"
+        assert AlertStatus.RESOLVED.value == "resolved"
+        assert AlertStatus.DISMISSED.value == "dismissed"
+        assert len(AlertStatus) == 4
+
+    def test_subscription_status_values(self):
+        """Test SubscriptionStatus enum has correct values."""
+        from app.models import SubscriptionStatus
+        
+        assert SubscriptionStatus.ACTIVE.value == "active"
+        assert SubscriptionStatus.PAUSED.value == "paused"
+        assert SubscriptionStatus.CANCELLED.value == "cancelled"
+        assert SubscriptionStatus.PAST_DUE.value == "past_due"
+        assert len(SubscriptionStatus) == 4
+
+    def test_billing_plan_code_values(self):
+        """Test BillingPlanCode enum has correct values."""
+        from app.models import BillingPlanCode
+        
+        assert BillingPlanCode.FREE.value == "free"
+        assert BillingPlanCode.PRO.value == "pro"
+        assert BillingPlanCode.ENTERPRISE.value == "enterprise"
+        assert len(BillingPlanCode) == 3
+
+    def test_audit_log_result_values(self):
+        """Test AuditLogResult enum has correct values."""
+        from app.models import AuditLogResult
+        
+        assert AuditLogResult.SUCCESS.value == "success"
+        assert AuditLogResult.FAILURE.value == "failure"
+        assert AuditLogResult.PARTIAL.value == "partial"
+        assert len(AuditLogResult) == 3
+
+
+class TestAuditLogModel:
+    """Tests for AuditLog model (Phase 4A)."""
+
+    @pytest.mark.asyncio
+    async def test_create_audit_log(self, db, org):
+        """Test creating an audit log entry."""
+        from app.models import AuditLog, AuditLogResult
+        
+        log = AuditLog(
+            organization_id=org.id,
+            user_id=1,
+            action="CREATE",
+            resource_type="employer",
+            resource_id="123",
+            result=AuditLogResult.SUCCESS,
+            payload_json={"key": "value"},
+            ip_address="192.168.1.1",
+        )
+        db.add(log)
+        await db.commit()
+        await db.refresh(log)
+
+        assert log.id is not None
+        assert log.organization_id == org.id
+        assert log.action == "CREATE"
+        assert log.result == AuditLogResult.SUCCESS
+        assert log.timestamp is not None
+
+    @pytest.mark.asyncio
+    async def test_audit_log_pii_redaction_payload(self, db, org):
+        """Test audit log stores PII-redacted payload."""
+        from app.models import AuditLog
+        
+        # Simulating redacted payload (email should be masked before storing)
+        log = AuditLog(
+            organization_id=org.id,
+            action="LOGIN",
+            resource_type="session",
+            payload_json={
+                "email": "t***@***.com",  # Pre-redacted
+                "ip": "192.168.1.1",
+            },
+        )
+        db.add(log)
+        await db.commit()
+        await db.refresh(log)
+
+        assert log.payload_json["email"] == "t***@***.com"  # Already redacted
+        assert "raw_password" not in str(log.payload_json)
+
+    @pytest.mark.asyncio
+    async def test_audit_log_multi_tenant_isolation(self, db, org):
+        """Test audit log enforces tenant isolation."""
+        from app.models import AuditLog
+        
+        # Create org2
+        org2 = Organization(name="Org2")
+        db.add(org2)
+        await db.flush()
+
+        # Create logs in different orgs
+        log1 = AuditLog(
+            organization_id=org.id,
+            action="TEST",
+            resource_type="test",
+        )
+        log2 = AuditLog(
+            organization_id=org2.id,
+            action="TEST",
+            resource_type="test",
+        )
+        db.add_all([log1, log2])
+        await db.commit()
+
+        # Query for org1 should NOT include org2's log
+        result = await db.execute(
+            select(AuditLog).where(AuditLog.organization_id == org.id)
+        )
+        logs = result.scalars().all()
+        assert len(logs) == 1
+        assert logs[0].organization_id == org.id
+
+
+class TestBillingPlanModel:
+    """Tests for BillingPlan model (Phase 4A)."""
+
+    @pytest.mark.asyncio
+    async def test_create_billing_plan(self, db):
+        """Test creating a billing plan."""
+        from app.models import BillingPlan, BillingPlanCode
+        
+        plan = BillingPlan(
+            code=BillingPlanCode.PRO,
+            name="Pro Plan",
+            description="Professional tier",
+            price_usd_cents=4900,  # $49.00
+            doc_limit=1000,
+            doc_limit_period="monthly",
+            features_json={"ai_analysis": True, "priority_support": True},
+        )
+        db.add(plan)
+        await db.commit()
+        await db.refresh(plan)
+
+        assert plan.id is not None
+        assert plan.code == BillingPlanCode.PRO
+        assert plan.price_usd_cents == 4900
+        assert plan.features_json["ai_analysis"] is True
+
+    @pytest.mark.asyncio
+    async def test_billing_plan_unlimited_doc_limit(self, db):
+        """Test billing plan with unlimited documents (doc_limit=0)."""
+        from app.models import BillingPlan, BillingPlanCode
+        
+        plan = BillingPlan(
+            code=BillingPlanCode.ENTERPRISE,
+            name="Enterprise",
+            price_usd_cents=19900,
+            doc_limit=0,  # Unlimited
+        )
+        db.add(plan)
+        await db.commit()
+        await db.refresh(plan)
+
+        assert plan.doc_limit == 0  # Unlimited
+
+    @pytest.mark.asyncio
+    async def test_billing_plan_free_tier(self, db):
+        """Test free tier billing plan."""
+        from app.models import BillingPlan, BillingPlanCode
+        
+        plan = BillingPlan(
+            code=BillingPlanCode.FREE,
+            name="Free",
+            description="Free tier",
+            price_usd_cents=0,
+            doc_limit=100,
+        )
+        db.add(plan)
+        await db.commit()
+        await db.refresh(plan)
+
+        assert plan.price_usd_cents == 0
+        assert plan.doc_limit == 100
+
+
+class TestSubscriptionModel:
+    """Tests for Subscription model (Phase 4A)."""
+
+    @pytest.mark.asyncio
+    async def test_create_subscription(self, db, org):
+        """Test creating a subscription."""
+        from app.models import Subscription, BillingPlan, SubscriptionStatus, BillingPlanCode
+        
+        # Create plan first
+        plan = BillingPlan(
+            code=BillingPlanCode.PRO,
+            name="Pro",
+            price_usd_cents=4900,
+            doc_limit=1000,
+        )
+        db.add(plan)
+        await db.flush()
+
+        # Create subscription
+        sub = Subscription(
+            organization_id=org.id,
+            plan_id=plan.id,
+            status=SubscriptionStatus.ACTIVE,
+            stripe_customer_id="cus_test123",
+        )
+        db.add(sub)
+        await db.commit()
+        await db.refresh(sub)
+
+        assert sub.id is not None
+        assert sub.organization_id == org.id
+        assert sub.status == SubscriptionStatus.ACTIVE
+        assert sub.started_at is not None
+
+    @pytest.mark.asyncio
+    async def test_subscription_unique_per_org(self, db, org):
+        """Test only one subscription per organization."""
+        from app.models import Subscription, BillingPlan, BillingPlanCode, SubscriptionStatus
+        
+        plan = BillingPlan(code=BillingPlanCode.FREE, name="Free", price_usd_cents=0)
+        db.add(plan)
+        await db.flush()
+
+        # First subscription
+        sub1 = Subscription(
+            organization_id=org.id,
+            plan_id=plan.id,
+            status=SubscriptionStatus.ACTIVE,
+        )
+        db.add(sub1)
+        await db.commit()
+
+        # Try duplicate (should fail unique constraint)
+        sub2 = Subscription(
+            organization_id=org.id,
+            plan_id=plan.id,
+            status=SubscriptionStatus.ACTIVE,
+        )
+        db.add(sub2)
+        with pytest.raises(Exception):  # IntegrityError
+            await db.commit()
+
+
+class TestUsageCycleModel:
+    """Tests for UsageCycle model (Phase 4A)."""
+
+    @pytest.mark.asyncio
+    async def test_create_usage_cycle(self, db, org):
+        """Test creating a usage cycle."""
+        from app.models import UsageCycle, Subscription, BillingPlan, BillingPlanCode
+        
+        # Create plan and subscription
+        plan = BillingPlan(code=BillingPlanCode.PRO, name="Pro", price_usd_cents=4900)
+        db.add(plan)
+        await db.flush()
+        
+        sub = Subscription(
+            organization_id=org.id,
+            plan_id=plan.id,
+        )
+        db.add(sub)
+        await db.flush()
+
+        # Create usage cycle
+        cycle = UsageCycle(
+            subscription_id=sub.id,
+            month_year="2026-04",
+            docs_used=150,
+            docs_limit=1000,
+        )
+        db.add(cycle)
+        await db.commit()
+        await db.refresh(cycle)
+
+        assert cycle.id is not None
+        assert cycle.month_year == "2026-04"
+        assert cycle.docs_used == 150
+        assert cycle.is_locked is False
+
+    @pytest.mark.asyncio
+    async def test_usage_cycle_lock(self, db, org):
+        """Test usage cycle can be locked after period ends."""
+        from app.models import UsageCycle, Subscription, BillingPlan, BillingPlanCode
+        
+        plan = BillingPlan(code=BillingPlanCode.FREE, name="Free", doc_limit=100)
+        db.add(plan)
+        await db.flush()
+        
+        sub = Subscription(organization_id=org.id, plan_id=plan.id)
+        db.add(sub)
+        await db.flush()
+
+        cycle = UsageCycle(
+            subscription_id=sub.id,
+            month_year="2026-03",
+            docs_used=100,
+            docs_limit=100,
+            is_locked=True,  # Period ended
+        )
+        db.add(cycle)
+        await db.commit()
+        await db.refresh(cycle)
+
+        assert cycle.is_locked is True
+
+    @pytest.mark.asyncio
+    async def test_usage_cycle_unique_month(self, db, org):
+        """Test unique constraint on subscription + month_year."""
+        from app.models import UsageCycle, Subscription, BillingPlan, BillingPlanCode
+        
+        plan = BillingPlan(code=BillingPlanCode.FREE, name="Free")
+        db.add(plan)
+        await db.flush()
+        
+        sub = Subscription(organization_id=org.id, plan_id=plan.id)
+        db.add(sub)
+        await db.flush()
+
+        cycle1 = UsageCycle(subscription_id=sub.id, month_year="2026-04")
+        db.add(cycle1)
+        await db.commit()
+
+        # Duplicate month should fail
+        cycle2 = UsageCycle(subscription_id=sub.id, month_year="2026-04")
+        db.add(cycle2)
+        with pytest.raises(Exception):
+            await db.commit()
+
+
+class TestLegalAlertModel:
+    """Tests for LegalAlert model (Phase 4A)."""
+
+    @pytest.mark.asyncio
+    async def test_create_legal_alert(self, db, org):
+        """Test creating a legal alert."""
+        from app.models import LegalAlert, AlertSeverity, AlertStatus
+        
+        alert = LegalAlert(
+            organization_id=org.id,
+            norma="NOM-052",
+            title="Residuo peligroso sin manifiesto",
+            description="Se detecto residuo PELIGROSO sin documento de transporte",
+            severity=AlertSeverity.HIGH,
+            status=AlertStatus.OPEN,
+        )
+        db.add(alert)
+        await db.commit()
+        await db.refresh(alert)
+
+        assert alert.id is not None
+        assert alert.norma == "NOM-052"
+        assert alert.severity == AlertSeverity.HIGH
+        assert alert.status == AlertStatus.OPEN
+
+    @pytest.mark.asyncio
+    async def test_legal_alert_resolve(self, db, org):
+        """Test resolving a legal alert."""
+        from datetime import datetime, timezone
+        
+        alert = LegalAlert(
+            organization_id=org.id,
+            norma="LFPDPPP",
+            title="Aviso de privacidad pendiente",
+            severity=AlertSeverity.MEDIUM,  # Use correct enum for severity
+            status=AlertStatus.OPEN,        # Use correct enum for status
+        )
+        db.add(alert)
+        await db.commit()
+        
+        # Resolve
+        alert.status = AlertStatus.RESOLVED
+        alert.resolved_at = datetime.now(timezone.utc)
+        alert.resolution_notes = "Aviso publicado en el sitio web"
+        await db.commit()
+        await db.refresh(alert)
+
+        assert alert.status == AlertStatus.RESOLVED
+        assert alert.resolved_at is not None
+        assert alert.resolution_notes is not None
+
+    @pytest.mark.asyncio
+    async def test_legal_alert_multi_tenant(self, db, org):
+        """Test legal alerts are tenant-isolated."""
+        from app.models import LegalAlert
+        
+        # Create second org
+        org2 = Organization(name="Org2")
+        db.add(org2)
+        await db.flush()
+
+        alert1 = LegalAlert(organization_id=org.id, norma="NOM-052", title="Alert 1")
+        alert2 = LegalAlert(organization_id=org2.id, norma="NOM-052", title="Alert 2")
+        db.add_all([alert1, alert2])
+        await db.commit()
+
+        # Query for org1 should only return alert1
+        result = await db.execute(
+            select(LegalAlert).where(LegalAlert.organization_id == org.id)
+        )
+        alerts = result.scalars().all()
+        assert len(alerts) == 1
+        assert alerts[0].title == "Alert 1"
+
+
+class TestWasteMovementModel:
+    """Tests for WasteMovement model (Phase 4A)."""
+
+    @pytest.mark.asyncio
+    async def test_create_waste_movement(self, db, org):
+        """Test creating a waste movement."""
+        from app.models import WasteMovement, MovementStatus
+        
+        movement = WasteMovement(
+            organization_id=org.id,
+            manifest_number="MAN-2026-001",
+            movement_type="TRANSPORTE",
+            quantity=500.0,
+            unit="kg",
+            status=MovementStatus.PENDING,
+            confidence_score=0.95,
+        )
+        db.add(movement)
+        await db.commit()
+        await db.refresh(movement)
+
+        assert movement.id is not None
+        assert movement.manifest_number == "MAN-2026-001"
+        assert movement.status == MovementStatus.PENDING
+        assert movement.is_immutable is False
+
+    @pytest.mark.asyncio
+    async def test_waste_movement_immutable(self, db, org):
+        """Test waste movement can be marked immutable after validation."""
+        from app.models import WasteMovement, MovementStatus
+        
+        movement = WasteMovement(
+            organization_id=org.id,
+            manifest_number="MAN-2026-002",
+            status=MovementStatus.VALIDATED,
+            is_immutable=True,  # Once validated, cannot be modified
+        )
+        db.add(movement)
+        await db.commit()
+        await db.refresh(movement)
+
+        assert movement.is_immutable is True
+        assert movement.status == MovementStatus.VALIDATED
+
+    @pytest.mark.asyncio
+    async def test_waste_movement_multi_tenant(self, db, org):
+        """Test waste movements are tenant-isolated."""
+        from app.models import WasteMovement
+        
+        org2 = Organization(name="Org2")
+        db.add(org2)
+        await db.flush()
+
+        mv1 = WasteMovement(organization_id=org.id, manifest_number="MAN-A-001")
+        mv2 = WasteMovement(organization_id=org2.id, manifest_number="MAN-B-001")
+        db.add_all([mv1, mv2])
+        await db.commit()
+
+        # Org1 should only see mv1
+        result = await db.execute(
+            select(WasteMovement).where(WasteMovement.organization_id == org.id)
+        )
+        movements = result.scalars().all()
+        assert len(movements) == 1
+        assert movements[0].manifest_number == "MAN-A-001"
+
+
+class TestBillingSchemas4A:
+    """Tests for Phase 4A Pydantic schemas."""
+
+    def test_audit_log_create_schema(self):
+        """Test AuditLogCreate schema validation."""
+        from app.schemas.domain import AuditLogCreate, AuditLogResultEnum
+        
+        data = AuditLogCreate(
+            organization_id=1,
+            action="LOGIN",
+            resource_type="session",
+            result=AuditLogResultEnum.SUCCESS,
+        )
+        assert data.action == "LOGIN"
+        assert data.result == AuditLogResultEnum.SUCCESS
+
+    def test_billing_plan_create_schema(self):
+        """Test BillingPlanCreate schema validation."""
+        from app.schemas.domain import BillingPlanCreate, BillingPlanCodeEnum
+        
+        data = BillingPlanCreate(
+            code=BillingPlanCodeEnum.PRO,
+            name="Pro Plan",
+            price_usd_cents=4900,
+            doc_limit=1000,
+        )
+        assert data.code == BillingPlanCodeEnum.PRO
+        assert data.price_usd_cents == 4900
+
+    def test_subscription_create_schema(self):
+        """Test SubscriptionCreate schema validation."""
+        from app.schemas.domain import SubscriptionCreate, SubscriptionStatusEnum
+        
+        data = SubscriptionCreate(
+            organization_id=1,
+            plan_id=1,
+            status=SubscriptionStatusEnum.ACTIVE,
+        )
+        assert data.status == SubscriptionStatusEnum.ACTIVE
+
+    def test_usage_cycle_create_schema(self):
+        """Test UsageCycleCreate schema with YYYY-MM format."""
+        from app.schemas.domain import UsageCycleCreate
+        
+        data = UsageCycleCreate(
+            subscription_id=1,
+            month_year="2026-04",
+            docs_used=150,
+            docs_limit=1000,
+        )
+        assert data.month_year == "2026-04"
+
+    def test_usage_cycle_invalid_month_format(self):
+        """Test UsageCycleCreate rejects invalid month format."""
+        from app.schemas.domain import UsageCycleCreate
+        from pydantic import ValidationError
+        
+        with pytest.raises(ValidationError):
+            UsageCycleCreate(
+                subscription_id=1,
+                month_year="04-2026",  # Wrong format
+            )
+
+    def test_legal_alert_create_schema(self):
+        """Test LegalAlertCreate schema validation."""
+        from app.schemas.domain import LegalAlertCreate, AlertSeverityEnum, AlertStatusEnum
+        
+        data = LegalAlertCreate(
+            organization_id=1,
+            norma="NOM-052",
+            title="Alert Test",
+            severity=AlertSeverityEnum.HIGH,
+            status=AlertStatusEnum.OPEN,
+        )
+        assert data.norma == "NOM-052"
+        assert data.severity == AlertSeverityEnum.HIGH
