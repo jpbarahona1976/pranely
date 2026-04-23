@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.org_deps import get_current_org
+from app.api.deps import get_current_active_organization
 from app.core.database import get_db
-from app.models import Employer, EntityStatus, Organization
+from app.models import Employer, EntityStatus, User, Organization
 from app.schemas.domain import (
     EmployerCreate,
     EmployerListResponse,
@@ -36,10 +36,12 @@ def _apply_tenant_filter(query, org_id: int, include_archived: bool = False):
 )
 async def create_employer(
     data: EmployerCreate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerResponse:
     """Create a new employer."""
+    user, org = user_org
+    
     # Check RFC uniqueness within tenant
     existing = await db.execute(
         select(Employer).where(
@@ -93,10 +95,12 @@ async def list_employers(
     status_filter: Optional[str] = Query(None, description="Filter by status"),
     search: Optional[str] = Query(None, description="Search by name or RFC"),
     include_archived: bool = Query(False, description="Include archived employers"),
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerListResponse:
     """List employers with pagination and filters."""
+    user, org = user_org
+    
     # Base conditions
     conditions = [Employer.organization_id == org.id]
     if not include_archived:
@@ -147,10 +151,12 @@ async def list_employers(
 )
 async def get_employer(
     employer_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerResponse:
     """Get employer by ID."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Employer).where(
             and_(
@@ -185,10 +191,12 @@ async def get_employer(
 async def update_employer(
     employer_id: int,
     data: EmployerUpdate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerResponse:
     """Update an employer."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Employer).where(
             and_(
@@ -257,10 +265,12 @@ async def update_employer(
 )
 async def archive_employer(
     employer_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Archive (soft-delete) an employer."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Employer).where(
             and_(

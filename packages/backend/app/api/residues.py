@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.org_deps import get_current_org
+from app.api.deps import get_current_active_organization
 from app.core.database import get_db
-from app.models import Employer, EntityStatus, Organization, Residue, Transporter, WasteStatus, WasteType
+from app.models import Employer, EntityStatus, User, Organization, Residue, Transporter, WasteStatus, WasteType
 from app.schemas.domain import (
     ResidueCreate,
     ResidueListResponse,
@@ -27,10 +27,12 @@ router = APIRouter(prefix="/residues", tags=["Residues"])
 )
 async def create_residue(
     data: ResidueCreate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> ResidueResponse:
     """Create a new residue."""
+    user, org = user_org
+    
     # Verify employer belongs to current tenant
     employer_result = await db.execute(
         select(Employer).where(
@@ -110,10 +112,12 @@ async def list_residues(
     waste_type_filter: Optional[str] = Query(None, description="Filter by waste type"),
     employer_id: Optional[int] = Query(None, description="Filter by employer"),
     search: Optional[str] = Query(None, description="Search by name"),
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> ResidueListResponse:
     """List residues with pagination and filters."""
+    user, org = user_org
+    
     # Base conditions
     conditions = [Residue.organization_id == org.id]
     if status_filter:
@@ -161,10 +165,12 @@ async def list_residues(
 )
 async def get_residue(
     residue_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> ResidueResponse:
     """Get residue by ID."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Residue).where(
             and_(
@@ -198,10 +204,12 @@ async def get_residue(
 async def update_residue(
     residue_id: int,
     data: ResidueUpdate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> ResidueResponse:
     """Update a residue."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Residue).where(
             and_(
@@ -270,10 +278,12 @@ async def update_residue(
 )
 async def delete_residue(
     residue_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Delete a residue."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Residue).where(
             and_(

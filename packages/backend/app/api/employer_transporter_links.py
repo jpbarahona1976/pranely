@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.org_deps import get_current_org
+from app.api.deps import get_current_active_organization
 from app.core.database import get_db
-from app.models import Employer, EmployerTransporterLink, Organization, Transporter
+from app.models import Employer, EmployerTransporterLink, User, Organization, Transporter
 from app.schemas.domain import (
     EmployerTransporterLinkCreate,
     EmployerTransporterLinkResponse,
@@ -27,10 +27,12 @@ router = APIRouter(prefix="/employer-transporter-links", tags=["Employer Transpo
 )
 async def create_link(
     data: EmployerTransporterLinkCreate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerTransporterLinkResponse:
     """Create a new employer-transporter link."""
+    user, org = user_org
+    
     # Verify employer belongs to current tenant
     employer_result = await db.execute(
         select(Employer).where(
@@ -121,10 +123,12 @@ async def list_links(
     employer_id: Optional[int] = Query(None, description="Filter by employer"),
     transporter_id: Optional[int] = Query(None, description="Filter by transporter"),
     is_authorized: Optional[bool] = Query(None, description="Filter by authorization status"),
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> list[EmployerTransporterLinkResponse]:
     """List employer-transporter links."""
+    user, org = user_org
+    
     conditions = [EmployerTransporterLink.organization_id == org.id]
     
     if employer_id is not None:
@@ -153,10 +157,12 @@ async def list_links(
 )
 async def get_link(
     link_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerTransporterLinkResponse:
     """Get link by ID."""
+    user, org = user_org
+    
     result = await db.execute(
         select(EmployerTransporterLink).where(
             and_(
@@ -190,10 +196,12 @@ async def get_link(
 async def update_link(
     link_id: int,
     data: EmployerTransporterLinkUpdate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> EmployerTransporterLinkResponse:
     """Update a link."""
+    user, org = user_org
+    
     result = await db.execute(
         select(EmployerTransporterLink).where(
             and_(
@@ -238,10 +246,12 @@ async def update_link(
 )
 async def delete_link(
     link_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Delete a link."""
+    user, org = user_org
+    
     result = await db.execute(
         select(EmployerTransporterLink).where(
             and_(

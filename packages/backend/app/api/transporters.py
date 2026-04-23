@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.org_deps import get_current_org
+from app.api.deps import get_current_active_organization
 from app.core.database import get_db
-from app.models import EntityStatus, Organization, Transporter
+from app.models import EntityStatus, User, Organization, Transporter
 from app.schemas.domain import (
     TransporterCreate,
     TransporterListResponse,
@@ -28,10 +28,12 @@ router = APIRouter(prefix="/transporters", tags=["Transporters"])
 )
 async def create_transporter(
     data: TransporterCreate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> TransporterResponse:
     """Create a new transporter."""
+    user, org = user_org
+    
     # Check RFC uniqueness within tenant
     existing = await db.execute(
         select(Transporter).where(
@@ -85,10 +87,12 @@ async def list_transporters(
     status_filter: Optional[str] = Query(None, description="Filter by status"),
     search: Optional[str] = Query(None, description="Search by name or RFC"),
     include_archived: bool = Query(False, description="Include archived transporters"),
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> TransporterListResponse:
     """List transporters with pagination and filters."""
+    user, org = user_org
+    
     # Base conditions
     conditions = [Transporter.organization_id == org.id]
     if not include_archived:
@@ -139,10 +143,12 @@ async def list_transporters(
 )
 async def get_transporter(
     transporter_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> TransporterResponse:
     """Get transporter by ID."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Transporter).where(
             and_(
@@ -177,10 +183,12 @@ async def get_transporter(
 async def update_transporter(
     transporter_id: int,
     data: TransporterUpdate,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> TransporterResponse:
     """Update a transporter."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Transporter).where(
             and_(
@@ -249,10 +257,12 @@ async def update_transporter(
 )
 async def archive_transporter(
     transporter_id: int,
-    org: Organization = Depends(get_current_org),
+    user_org: tuple[User, Organization] = Depends(get_current_active_organization),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Archive (soft-delete) a transporter."""
+    user, org = user_org
+    
     result = await db.execute(
         select(Transporter).where(
             and_(
