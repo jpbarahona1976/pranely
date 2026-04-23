@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **BLOQUE 4A CERRADO** ✅
 > Modelo de datos funcional con entidades Waste/Audit/Billing, schemas Pydantic, y ERD documentado.
+> **AUDITORÍA: APROBADO** (Claude)
 
 ### Added
 
@@ -102,19 +103,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-#### Fase 4A: Fixes Bloqueantes Auditoría ✅
-
-**WasteMovement.status consistencia** (`app/models.py`)
-- Cambiado `status` de `String(20)` a `Enum(MovementStatus)` para consistencia
-- Ahora usa `MovementStatus.PENDING` como default
+#### Fase 4A: Fixes Finales Auditoría ✅
 
 **Tests imports** (`tests/test_domain_models.py`)
-- Agregados imports de enums Fase 4A: `MovementStatus`, `AlertSeverity`, `AlertStatus`, `SubscriptionStatus`, `BillingPlanCode`, `AuditLogResult`
-- Agregados imports de modelos Fase 4A: `AuditLog`, `BillingPlan`, `Subscription`, `UsageCycle`, `LegalAlert`, `WasteMovement`
+- `test_usage_cycle_lock`: Agregado `BillingPlanCode` al import local
+- `test_usage_cycle_unique_month`: Agregado `BillingPlanCode` al import local
+- Ambos tests ahora usan correctamente `BillingPlan(code=BillingPlanCode.FREE, ...)`
 
-**LegalAlert enum mismatch** (`tests/test_domain_models.py`)
-- Corregido `test_legal_alert_resolve`: usaba `AlertStatus.OPEN` en campo `severity`
-- Ahora usa `AlertSeverity.MEDIUM` para severity y `AlertStatus.OPEN` para status
+**Commits:**
+- `fix: add BillingPlanCode import to test_usage_cycle_lock`
+- `fix: add BillingPlanCode import to test_usage_cycle_unique_month`
 
 ---
 

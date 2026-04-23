@@ -376,7 +376,7 @@ class TestMultiOrgCRUDIsolation:
         
         data = EmployerCreate(
             name="New Employer",
-            rfc="RFC-NEW-123456",
+            rfc="ABCD123456789",  # 13 chars: 4 letters + 6 digits + 3 alfanum (audit fix)
             address="New Address",
             status=EntityStatusEnum.ACTIVE,
         )
@@ -389,7 +389,7 @@ class TestMultiOrgCRUDIsolation:
         
         # Verify employer was created in correct org
         assert result.organization_id == org_a.id
-        assert result.rfc == "RFC-NEW-123456"
+        assert result.rfc == "ABCD123456789"  # 13 chars valid RFC (audit fix)
 
     @pytest.mark.asyncio
     async def test_list_employers_only_returns_org_employers(
