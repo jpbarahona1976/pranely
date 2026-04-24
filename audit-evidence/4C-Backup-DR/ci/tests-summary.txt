@@ -1,0 +1,38 @@
+.F.FFsF...s...FF.FF..F                                                   [100%]
+============================== warnings summary ===============================
+packages\backend\tests\test_backup_dr.py:130
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:130: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:196
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:196: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:276
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:276: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:301
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:301: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:378
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:378: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:379
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:379: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED packages\backend\tests\test_backup_dr.py::TestBackupAutomation::test_backup_healthcheck_rpo_compliance
+FAILED packages\backend\tests\test_backup_dr.py::TestBackupAutomation::test_backup_retention_policy
+FAILED packages\backend\tests\test_backup_dr.py::TestBackupExecution::test_pg_dump_available
+FAILED packages\backend\tests\test_backup_dr.py::TestBackupExecution::test_backup_postgres_creates_file
+FAILED packages\backend\tests\test_backup_dr.py::TestMultiTenantIntegrity::test_organization_id_in_backup
+FAILED packages\backend\tests\test_backup_dr.py::TestMultiTenantIntegrity::test_organization_id_not_null
+FAILED packages\backend\tests\test_backup_dr.py::TestDocumentation::test_dr_plan_has_rpo_rto
+FAILED packages\backend\tests\test_backup_dr.py::TestDocumentation::test_dr_plan_has_checklist
+FAILED packages\backend\tests\test_backup_dr.py::TestBackupRestoreIntegration::test_backup_restore_cycle
+9 failed, 11 passed, 2 skipped, 6 warnings in 2.89s

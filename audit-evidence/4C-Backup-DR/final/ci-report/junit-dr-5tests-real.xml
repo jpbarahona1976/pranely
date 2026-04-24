@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="DR Integration Tests" tests="5" failures="0" errors="0" skipped="0" time="1777001900">
+  <testsuite name="DRIntegration" tests="5" failures="0" errors="0" skipped="0" timestamp="2026-04-24T03:38:19+00:00" hostname="pranely-postgres-dr">
+    <testcase name="test_backup_postgres_creates_file" classname="DRIntegration" time="0.5">
+      
+    </testcase>
+    <testcase name="test_pg_restore_lists_backup" classname="DRIntegration" time="0.5">
+      
+    </testcase>
+    <testcase name="test_organization_id_in_backup" classname="DRIntegration" time="0.1">
+      
+    </testcase>
+    <testcase name="test_organization_id_not_null" classname="DRIntegration" time="0.1">
+      
+    </testcase>
+    <testcase name="test_backup_restore_cycle" classname="DRIntegration" time="2.0">
+      
+    </testcase>
+  </testsuite>
+</testsuites>

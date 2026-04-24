@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "PRANELY API"
     DEBUG: bool = False
+    ENV: str = "development"
     
     # Security
     SECRET_KEY: str  # Must be set in environment
@@ -22,6 +23,13 @@ class Settings(BaseSettings):
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
+    
+    # Stripe
+    STRIPE_SECRET_KEY: Optional[str] = None  # Stripe API key for checkout sessions
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None  # Must be set for webhook verification
+    
+    # Frontend URL for redirects
+    FRONTEND_URL: str = "http://localhost:3000"
     
     model_config = SettingsConfigDict(
         env_file=".env",

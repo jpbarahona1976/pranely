@@ -1,0 +1,51 @@
+;
+; Archive created at 2026-04-24 00:13:00 UTC
+;     dbname: pranely_dev
+;     TOC Entries: 40
+;     Compression: gzip
+;     Dump Version: 1.15-0
+;     Format: CUSTOM
+;     Integer: 4 bytes
+;     Offset: 8 bytes
+;     Dumped from database version: 16.13
+;     Dumped by pg_dump version: 16.13
+;
+;
+; Selected TOC Entries:
+;
+220; 1259 24604 TABLE public memberships pranely
+219; 1259 24603 SEQUENCE public memberships_id_seq pranely
+3466; 0 0 SEQUENCE OWNED BY public memberships_id_seq pranely
+216; 1259 24578 TABLE public organizations pranely
+215; 1259 24577 SEQUENCE public organizations_id_seq pranely
+3467; 0 0 SEQUENCE OWNED BY public organizations_id_seq pranely
+218; 1259 24589 TABLE public users pranely
+217; 1259 24588 SEQUENCE public users_id_seq pranely
+3468; 0 0 SEQUENCE OWNED BY public users_id_seq pranely
+222; 1259 24624 TABLE public waste_movements pranely
+221; 1259 24623 SEQUENCE public waste_movements_id_seq pranely
+3469; 0 0 SEQUENCE OWNED BY public waste_movements_id_seq pranely
+3286; 2604 24607 DEFAULT public memberships id pranely
+3279; 2604 24581 DEFAULT public organizations id pranely
+3282; 2604 24592 DEFAULT public users id pranely
+3288; 2604 24627 DEFAULT public waste_movements id pranely
+3457; 0 24604 TABLE DATA public memberships pranely
+3453; 0 24578 TABLE DATA public organizations pranely
+3455; 0 24589 TABLE DATA public users pranely
+3459; 0 24624 TABLE DATA public waste_movements pranely
+3470; 0 0 SEQUENCE SET public memberships_id_seq pranely
+3471; 0 0 SEQUENCE SET public organizations_id_seq pranely
+3472; 0 0 SEQUENCE SET public users_id_seq pranely
+3473; 0 0 SEQUENCE SET public waste_movements_id_seq pranely
+3299; 2606 24610 CONSTRAINT public memberships memberships_pkey pranely
+3301; 2606 24612 CONSTRAINT public memberships memberships_user_id_organization_id_key pranely
+3292; 2606 24587 CONSTRAINT public organizations organizations_pkey pranely
+3295; 2606 24601 CONSTRAINT public users users_email_key pranely
+3297; 2606 24599 CONSTRAINT public users users_pkey pranely
+3305; 2606 24633 CONSTRAINT public waste_movements waste_movements_pkey pranely
+3293; 1259 24602 INDEX public ix_users_email pranely
+3302; 1259 24640 INDEX public ix_waste_movement_manifest pranely
+3303; 1259 24639 INDEX public ix_waste_movement_org_timestamp pranely
+3306; 2606 24618 FK CONSTRAINT public memberships memberships_organization_id_fkey pranely
+3307; 2606 24613 FK CONSTRAINT public memberships memberships_user_id_fkey pranely
+3308; 2606 24634 FK CONSTRAINT public waste_movements waste_movements_organization_id_fkey pranely

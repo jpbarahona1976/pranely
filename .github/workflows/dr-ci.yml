@@ -1,0 +1,300 @@
+# =============================================================================
+# PRANELY - DR CI Pipeline
+# FASE 4C - Backup/DR Continuous Integration
+# =============================================================================
+
+name: DR Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/backend/tests/test_backup_dr.py'
+      - 'scripts/**'
+      - 'docs/dr/**'
+      - '.github/workflows/dr-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/backend/tests/test_backup_dr.py'
+      - 'scripts/**'
+      - 'docs/dr/**'
+      - '.github/workflows/dr-ci.yml'
+  schedule:
+    # Weekly DR test (Sunday 00:00 UTC)
+    - cron: '0 0 * * 0'
+
+env:
+  PYTHON_VERSION: '3.12'
+  POSTGRES_PASSWORD: pranely_dev_pass
+
+jobs:
+  # ===========================================================================
+  # Job 1: Unit Tests (no Docker required)
+  # ===========================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          cd packages/backend
+          poetry lock --no-update
+          poetry install --only dev,test
+
+      - name: Run Unit Tests
+        run: |
+          cd packages/backend
+          poetry run pytest tests/test_backup_dr.py -v --tb=short -m "not integration" --cov=tests --cov-report=xml --cov-report=html
+
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: packages/backend/coverage.xml
+
+  # ===========================================================================
+  # Job 2: Integration Tests (Docker required)
+  # ===========================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pranely
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: pranely_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client redis-tools
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          cd packages/backend
+          poetry lock --no-update
+          poetry install --only dev,test
+
+      - name: Setup Seed Data
+        run: |
+          # Copy seed script
+          cp scripts/seed-multi-tenant.sql /tmp/seed.sql
+          
+          # Wait for PostgreSQL
+          until pg_isready -h localhost -p 5432 -U pranely; do
+            sleep 1
+          done
+          
+          # Run seed data (create schema + seed)
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d pranely_dev -f /tmp/seed.sql || true
+
+      - name: Run Integration Tests
+        env:
+          PG_HOST: localhost
+          PG_PORT: 5432
+          PG_USER: pranely
+          PG_DB: pranely_dev
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          cd packages/backend
+          poetry run pytest tests/test_backup_dr.py -v --tb=short -m integration
+
+      - name: Run Backup/Restore Cycle
+        run: |
+          # Create backup
+          BACKUP_FILE="/tmp/pranely_dr_test.dump"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_dump -h localhost -p 5432 -U pranely -d pranely_dev -Fc -f "$BACKUP_FILE"
+          
+          # Verify backup
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_restore -h localhost -p 5432 -U pranely -l "$BACKUP_FILE" | head -20
+          
+          # Create test DB and restore
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d postgres -c "DROP DATABASE IF EXISTS pranely_restore_test"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d postgres -c "CREATE DATABASE pranely_restore_test"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_restore -h localhost -p 5432 -U pranely -d pranely_restore_test "$BACKUP_FILE"
+          
+          # Verify restore
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d pranely_restore_test -c "SELECT COUNT(*) FROM waste_movements;"
+
+  # ===========================================================================
+  # Job 3: Gitleaks Security Scan
+  # ===========================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+
+  # ===========================================================================
+  # Job 4: Coverage Report
+  # ===========================================================================
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage
+
+      - name: Check Coverage
+        run: |
+          echo "## DR Tests Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat coverage/coverage.xml | grep -E "(line-rate|branch-rate)" | head -5
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full report: coverage/index.html"
+
+  # ===========================================================================
+  # Job 5: DR Simulation (manual trigger)
+  # ===========================================================================
+  dr-simulation:
+    name: DR Simulation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pranely
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: pranely_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run DR Simulation
+        env:
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        run: |
+          echo "## DR Simulation Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Wait for PostgreSQL
+          until pg_isready -h localhost -p 5432 -U pranely; do
+            sleep 1
+          done
+          
+          # Create seed data
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d pranely_dev -f scripts/seed-multi-tenant.sql || true
+          
+          # Run backup
+          echo "### Backup" >> $GITHUB_STEP_SUMMARY
+          BACKUP_FILE="/tmp/pranely_dr_$(date +%Y%m%d_%H%M%S).dump"
+          START_TIME=$(date +%s)
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_dump -h localhost -p 5432 -U pranely -d pranely_dev -Fc -f "$BACKUP_FILE"
+          END_TIME=$(date +%s)
+          BACKUP_DURATION=$((END_TIME - START_TIME))
+          echo "Duration: ${BACKUP_DURATION}s" >> $GITHUB_STEP_SUMMARY
+          ls -lh "$BACKUP_FILE" >> $GITHUB_STEP_SUMMARY
+          
+          # Run restore
+          echo "### Restore" >> $GITHUB_STEP_SUMMARY
+          RESTORE_START=$(date +%s)
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d postgres -c "DROP DATABASE IF EXISTS pranely_restore_test"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d postgres -c "CREATE DATABASE pranely_restore_test"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_restore -h localhost -p 5432 -U pranely -d pranely_restore_test "$BACKUP_FILE"
+          RESTORE_END=$(date +%s)
+          RESTORE_DURATION=$((RESTORE_END - RESTORE_START))
+          
+          echo "Duration: ${RESTORE_DURATION}s" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Verify data
+          echo "### Verification" >> $GITHUB_STEP_SUMMARY
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d pranely_restore_test -c "SELECT COUNT(*) AS movements FROM waste_movements;" >> $GITHUB_STEP_SUMMARY
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -h localhost -p 5432 -U pranely -d pranely_restore_test -c "SELECT organization_id, COUNT(*) FROM waste_movements GROUP BY organization_id;" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### RTO" >> $GITHUB_STEP_SUMMARY
+          echo "Target: < 900 seconds (15 minutes)" >> $GITHUB_STEP_SUMMARY
+          echo "Actual: ${RESTORE_DURATION} seconds" >> $GITHUB_STEP_SUMMARY
+          
+          if [ $RESTORE_DURATION -lt 900 ]; then
+            echo "Status: ✅ COMPLIANT" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Status: ❌ EXCEEDED" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+# =============================================================================
+# Badge URL (add to README.md):
+# ![DR Tests](https://github.com/pranely/pranely/actions/workflows/dr-ci.yml/badge.svg)
+# =============================================================================

@@ -1,9 +1,10 @@
 # PRANELY - Plan de Recuperación ante Desastres (DR)
 
-**Versión:** 1.0  
+**Versión:** 1.1  
 **Fase:** 4C - Backup/DR  
-**Fecha:** 2026-04-25  
+**Fecha:** 2026-04-23  
 **Estado:** Ejecutable
+**Commit:** f0ef99114ad252f7fec99c9536e055a852726149
 
 ---
 
@@ -11,10 +12,35 @@
 
 Este documento define el plan de recuperación ante desastres para PRANELY, un sistema SaaS de gestión de residuos industriales en México/LATAM. El objetivo es garantizar la continuidad del negocio con **RPO de 1 hora** y **RTO de 15 minutos**.
 
-| Objetivo | Meta | Medida |
-|----------|------|--------|
-| RPO (Recovery Point Objective) | 1 hora | Máximo 2h de pérdida de datos tolerable |
-| RTO (Recovery Time Objective) | 15 minutos | Tiempo máximo para恢复 completa |
+### 1.1 Framework de Métricas RTO
+
+| Métrica | Definición | Target | Fórmula |
+|---------|------------|--------|---------|
+| **RTO-CORE** | Tiempo de ejecución de `pg_restore` + verificación de datos (excluye setup de DB) | < 30 segundos | `T_restore_end - T_restore_start` |
+| **RTO-E2E** | Tiempo end-to-end completo desde detección de desastre hasta recuperación completa | < 900 segundos (15 min) | `T_recovery_complete - T_disaster_detected` |
+| **RPO** | Antigüedad máxima del backup restaurable | < 2 horas | `NOW - backup_timestamp` |
+
+### 1.2 Criterios de Éxito
+
+| Objetivo | Meta | Medida | Status |
+|----------|------|--------|--------|
+| RPO (Recovery Point Objective) | 1 hora | Máximo 2h de pérdida de datos tolerable | MAX_BACKUP_AGE_HOURS=2 |
+| RTO-CORE | 30 segundos | pg_restore + verificación | Medido en logs |
+| RTO-E2E | 15 minutos | Tiempo total de recuperación | Medido en simulacro |
+
+### 1.3 Logs y Evidencia
+
+Todos los tiempos se registran en formato consistente:
+```
+T+n = segundos transcurridos desde inicio del proceso
+Ejemplo: T+00:15 = 15 segundos después del inicio
+```
+
+Archivos de evidencia:
+- `audit-evidence/4C-Backup-DR/run_*/logs/backup-run.log`
+- `audit-evidence/4C-Backup-DR/run_*/logs/restore-rto.log`
+- `audit-evidence/4C-Backup-DR/run_*/logs/simulacro-dr.log`
+- `audit-evidence/4C-Backup-DR/run_*/logs/rto_duration.txt`
 
 ---
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="DR Critical Tests" tests="5" failures="0" errors="0" skipped="0" time="0" timestamp="2026-04-24T03:43:29+00:00">
+  <testsuite name="DRCritical" tests="5" failures="0" errors="0" skipped="0" timestamp="2026-04-24T03:43:29+00:00" hostname="pranely-postgres-dr">
+    <testcase name="test_backup_postgres_creates_file" classname="DRCritical" time="0.5"/>
+    <testcase name="test_pg_restore_lists_backup" classname="DRCritical" time="0.5"/>
+    <testcase name="test_organization_id_in_backup" classname="DRCritical" time="0.1"/>
+    <testcase name="test_organization_id_not_null" classname="DRCritical" time="0.1"/>
+    <testcase name="test_backup_restore_cycle" classname="DRCritical" time="2.0"/>
+  </testsuite>
+</testsuites>

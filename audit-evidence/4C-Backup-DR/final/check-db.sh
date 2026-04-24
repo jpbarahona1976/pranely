@@ -1,0 +1,13 @@
+#!/bin/sh
+echo "=== Network Check ==="
+echo "postgres containers:"
+docker ps --filter "name=postgres" --format "{{.Names}}"
+echo ""
+echo "redis containers:"
+docker ps --filter "name=redis" --format "{{.Names}}"
+echo ""
+echo "=== PostgreSQL Table Structure ==="
+docker exec pranely-postgres-dr psql -U pranely -d pranely_dev -c "\d waste_movements"
+echo ""
+echo "=== Check organization_id constraint ==="
+docker exec pranely-postgres-dr psql -U pranely -d pranely_dev -c "SELECT attname, attnotnull FROM pg_attribute WHERE attrelid = 'waste_movements'::regclass AND attname = 'organization_id';"

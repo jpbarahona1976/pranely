@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only-32chars")
 os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost/test")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
+os.environ.setdefault("ENV", "test")
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient

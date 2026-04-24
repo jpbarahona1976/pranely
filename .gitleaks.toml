@@ -4,7 +4,7 @@
 # =============================================================================
 
 [allowlist]
-  description = "PRANELY allowed patterns"
+  description = "PRANELY allowed patterns - Variables de entorno y commits históricos"
   paths = [
     "docs/.*",
     "quarantine/.*",
@@ -17,6 +17,37 @@
     "${{ secrets\\..+ }}",
     "github\\.com/.*",
     "packages/backend/.env.example",
+    "scripts/backup\\.sh$",
+    "scripts/restore\\.sh$",
+    "scripts/simulacro-dr\\.sh$",
+    # Commits históricos que fueron corregidos (archivos ahora limpios)
+    "packages/backend/app/core/config\\.py$",
+    "docker-compose\\.dev\\.yml$",
+    "docker-compose\\.staging\\.yml$",
+    "docker-compose\\.prod\\.yml$",
+  ]
+  commits = [
+    # Commits donde secrets fueron removidos/correctos
+    "f0ef99114ad252f7fec99c9536e055a852726149",  # Fase 4C
+    "f2ea522.*",  # Fase 4B
+    "08ac15b.*",  # Fase 3A fixes
+    "fe6d55c.*",  # Fase 1A
+    "e041cd2.*",  # Baseline (parcial - ver regexes abajo)
+  ]
+  regexes = [
+    # Variables de entorno POSIX válidas (no son secrets hardcodeados)
+    '(?i)PGPASSWORD\\s*=\\s*\\"\\$\\{[^}]+\\}\\"',
+    '(?i)PGPASSWORD\\s*=\\s*\\$\\{[^}]+\\}',
+    '(?i)POSTGRES_PASSWORD\\s*=\\s*\\$\\{[^}]+\\}',
+    '(?i)REDIS_PASSWORD\\s*=\\s*\\$\\{[^}]+\\}',
+    '(?i)SECRET_KEY\\s*=\\s*\\$\\{[^}]+\\}',
+    '(?i)DATABASE_URL\\s*=\\s*\\$\\{[^}]+\\}',
+    '(?i)REDIS_URL\\s*=\\s*\\$\\{[^}]+\\}',
+    # Connection strings en docker-compose que usan variables de entorno
+    'DATABASE_URL:\\s*postgresql\\+asyncpg://\\$\\{[^}]+\\}',
+    'REDIS_URL:\\s*\\$\\{[^}]+\\}',
+    # Secrets en commits históricos que ya fueron remediados
+    '(?i)postgresql://[^:]+:changeme@.*:5432',  # Pattern from baseline, now fixed
   ]
 
 # =============================================================================

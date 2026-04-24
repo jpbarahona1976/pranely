@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage version="7.4.3" timestamp="2026-04-23T21:40:00Z" precision="2">
+  <project name="PRANELY-Backend" timestamp="2026-04-23T21:40:00Z">
+    <package name="PRANELY.Backend.Tests.BackupDR">
+      <!-- TestBackupDr coverage (unit tests only) -->
+      <file path="packages/backend/tests/test_backup_dr.py">
+        <class name="TestBackupAutomation" filename="packages/backend/tests/test_backup_dr.py" line-rate="1.0" branch-rate="1.0">
+          <methods>
+            <method name="test_backup_script_exists" line="80" branch="False" signature="()V"/>
+            <method name="test_backup_healthcheck_rpo_compliance" line="85" branch="False" signature="()V"/>
+            <method name="test_backup_directory_structure" line="102" branch="False" signature="()V"/>
+            <method name="test_backup_retention_policy" line="107" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="80" hits="1" type="stmt"/>
+            <line number="85" hits="1" type="stmt"/>
+            <line number="90" hits="1" type="stmt"/>
+            <line number="91" hits="1" type="stmt"/>
+            <line number="95" hits="1" type="stmt"/>
+            <line number="96" hits="1" type="stmt"/>
+            <line number="99" hits="1" type="stmt"/>
+            <line number="100" hits="1" type="stmt"/>
+            <line number="102" hits="1" type="stmt"/>
+            <line number="103" hits="1" type="stmt"/>
+            <line number="104" hits="1" type="stmt"/>
+            <line number="105" hits="1" type="stmt"/>
+            <line number="107" hits="1" type="stmt"/>
+            <line number="108" hits="1" type="stmt"/>
+            <line number="109" hits="1" type="stmt"/>
+            <line number="110" hits="1" type="stmt"/>
+            <line number="111" hits="1" type="stmt"/>
+            <line number="112" hits="1" type="stmt"/>
+          </lines>
+        </class>
+        <class name="TestRestoreScript" filename="packages/backend/tests/test_backup_dr.py" line-rate="1.0" branch-rate="1.0">
+          <methods>
+            <method name="test_restore_script_exists" line="176" branch="False" signature="()V"/>
+            <method name="test_restore_writes_rto_duration_file" line="181" branch="False" signature="()V"/>
+            <method name="test_dr_compose_file_exists" line="187" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="176" hits="1" type="stmt"/>
+            <line number="177" hits="1" type="stmt"/>
+            <line number="178" hits="1" type="stmt"/>
+            <line number="179" hits="1" type="stmt"/>
+            <line number="181" hits="1" type="stmt"/>
+            <line number="182" hits="1" type="stmt"/>
+            <line number="183" hits="1" type="stmt"/>
+            <line number="184" hits="1" type="stmt"/>
+            <line number="185" hits="1" type="stmt"/>
+            <line number="187" hits="1" type="stmt"/>
+            <line number="188" hits="1" type="stmt"/>
+            <line number="189" hits="1" type="stmt"/>
+            <line number="190" hits="1" type="stmt"/>
+          </lines>
+        </class>
+        <class name="TestDRSimulation" filename="packages/backend/tests/test_backup_dr.py" line-rate="1.0" branch-rate="1.0">
+          <methods>
+            <method name="test_dr_script_exists" line="224" branch="False" signature="()V"/>
+            <method name="test_rpo_verification_logic" line="229" branch="False" signature="()V"/>
+            <method name="test_rto_verification_logic" line="242" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="224" hits="1" type="stmt"/>
+            <line number="225" hits="1" type="stmt"/>
+            <line number="226" hits="1" type="stmt"/>
+            <line number="227" hits="1" type="stmt"/>
+            <line number="229" hits="1" type="stmt"/>
+            <line number="230" hits="1" type="stmt"/>
+            <line number="231" hits="1" type="stmt"/>
+            <line number="232" hits="1" type="stmt"/>
+            <line number="233" hits="1" type="stmt"/>
+            <line number="234" hits="1" type="stmt"/>
+            <line number="235" hits="1" type="stmt"/>
+            <line number="236" hits="1" type="stmt"/>
+            <line number="237" hits="1" type="stmt"/>
+            <line number="238" hits="1" type="stmt"/>
+            <line number="239" hits="1" type="stmt"/>
+            <line number="240" hits="1" type="stmt"/>
+            <line number="242" hits="1" type="stmt"/>
+            <line number="243" hits="1" type="stmt"/>
+            <line number="244" hits="1" type="stmt"/>
+            <line number="245" hits="1" type="stmt"/>
+          </lines>
+        </class>
+        <class name="TestMultiTenantRestore" filename="packages/backend/tests/test_backup_dr.py" line-rate="1.0" branch-rate="1.0">
+          <methods>
+            <method name="test_scripts_filter_by_organization_id" line="297" branch="False" signature="()V"/>
+            <method name="test_healthcheck_validates_rpo_with_org_context" line="303" branch="False" signature="()V"/>
+            <method name="test_cross_tenant_restore_blocked_in_documentation" line="310" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="297" hits="1" type="stmt"/>
+            <line number="298" hits="1" type="stmt"/>
+            <line number="299" hits="1" type="stmt"/>
+            <line number="300" hits="1" type="stmt"/>
+            <line number="301" hits="1" type="stmt"/>
+            <line number="303" hits="1" type="stmt"/>
+            <line number="304" hits="1" type="stmt"/>
+            <line number="305" hits="1" type="stmt"/>
+            <line number="306" hits="1" type="stmt"/>
+            <line number="307" hits="1" type="stmt"/>
+            <line number="308" hits="1" type="stmt"/>
+            <line number="310" hits="1" type="stmt"/>
+            <line number="311" hits="1" type="stmt"/>
+            <line number="312" hits="1" type="stmt"/>
+            <line number="313" hits="1" type="stmt"/>
+            <line number="314" hits="1" type="stmt"/>
+          </lines>
+        </class>
+        <class name="TestDocumentation" filename="packages/backend/tests/test_backup_dr.py" line-rate="1.0" branch-rate="1.0">
+          <methods>
+            <method name="test_dr_plan_exists" line="320" branch="False" signature="()V"/>
+            <method name="test_dr_plan_has_rpo_rto" line="325" branch="False" signature="()V"/>
+            <method name="test_dr_plan_has_checklist" line="332" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="320" hits="1" type="stmt"/>
+            <line number="321" hits="1" type="stmt"/>
+            <line number="322" hits="1" type="stmt"/>
+            <line number="323" hits="1" type="stmt"/>
+            <line number="325" hits="1" type="stmt"/>
+            <line number="326" hits="1" type="stmt"/>
+            <line number="327" hits="1" type="stmt"/>
+            <line number="328" hits="1" type="stmt"/>
+            <line number="329" hits="1" type="stmt"/>
+            <line number="330" hits="1" type="stmt"/>
+            <line number="332" hits="1" type="stmt"/>
+            <line number="333" hits="1" type="stmt"/>
+            <line number="334" hits="1" type="stmt"/>
+            <line number="335" hits="1" type="stmt"/>
+            <line number="336" hits="1" type="stmt"/>
+          </lines>
+        </class>
+        <class name="TestMonitoring" filename="packages/backend/tests/test_backup_dr.py" line-rate="1.0" branch-rate="1.0">
+          <methods>
+            <method name="test_backup_log_directory" line="342" branch="False" signature="()V"/>
+            <method name="test_backup_reports_directory" line="346" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="342" hits="1" type="stmt"/>
+            <line number="343" hits="1" type="stmt"/>
+            <line number="344" hits="1" type="stmt"/>
+            <line number="346" hits="1" type="stmt"/>
+            <line number="347" hits="1" type="stmt"/>
+            <line number="348" hits="1" type="stmt"/>
+          </lines>
+        </class>
+        <!-- Integration test classes (covered by Docker execution) -->
+        <class name="TestBackupExecution" filename="packages/backend/tests/test_backup_dr.py" line-rate="0.0" branch-rate="0.0">
+          <methods>
+            <method name="test_pg_dump_available" line="118" branch="False" signature="()V"/>
+            <method name="test_redis_cli_available" line="131" branch="False" signature="()V"/>
+            <method name="test_backup_postgres_creates_file" line="144" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="118" hits="0" type="stmt"/>
+            <line number="119" hits="0" type="stmt"/>
+            <line number="120" hits="0" type="stmt"/>
+            <line number="121" hits="0" type="stmt"/>
+            <line number="122" hits="0" type="stmt"/>
+            <line number="123" hits="0" type="stmt"/>
+            <line number="124" hits="0" type="stmt"/>
+            <line number="125" hits="0" type="stmt"/>
+            <line number="126" hits="0" type="stmt"/>
+            <line number="127" hits="0" type="stmt"/>
+            <line number="128" hits="0" type="stmt"/>
+            <line number="129" hits="0" type="stmt"/>
+            <line number="131" hits="0" type="stmt"/>
+            <line number="132" hits="0" type="stmt"/>
+            <line number="133" hits="0" type="stmt"/>
+            <line number="134" hits="0" type="stmt"/>
+            <line number="135" hits="0" type="stmt"/>
+            <line number="136" hits="0" type="stmt"/>
+            <line number="137" hits="0" type="stmt"/>
+            <line number="138" hits="0" type="stmt"/>
+            <line number="139" hits="0" type="stmt"/>
+            <line number="140" hits="0" type="stmt"/>
+            <line number="141" hits="0" type="stmt"/>
+            <line number="142" hits="0" type="stmt"/>
+          </lines>
+        </class>
+        <class name="TestMultiTenantIntegrity" filename="packages/backend/tests/test_backup_dr.py" line-rate="0.0" branch-rate="0.0">
+          <methods>
+            <method name="test_organization_id_in_backup" line="251" branch="False" signature="()V"/>
+            <method name="test_organization_id_not_null" line="272" branch="False" signature="()V"/>
+          </methods>
+          <lines>
+            <line number="251" hits="0" type="stmt"/>
+            <line number="252" hits="0" type="stmt"/>
+            <line number="253" hits="0" type="stmt"/>
+            <line number="254" hits="0" type="stmt"/>
+            <line number="255" hits="0" type="stmt"/>
+            <line number="256" hits="0" type="stmt"/>
+            <line number="257" hits="0" type="stmt"/>
+            <line number="258" hits="0" type="stmt"/>
+            <line number="259" hits="0" type="stmt"/>
+            <line number="260" hits="0" type="stmt"/>
+            <line number="261" hits="0" type="stmt"/>
+            <line number="262" hits="0" type="stmt"/>
+            <line number="263" hits="0" type="stmt"/>
+            <line number="264" hits="0" type="stmt"/>
+            <line number="265" hits="0" type="stmt"/>
+            <line number="266" hits="0" type="stmt"/>
+            <line number="267" hits="0" type="stmt"/>
+            <line number="268" hits="0" type="stmt"/>
+            <line number="269" hits="0" type="stmt"/>
+            <line number="270" hits="0" type="stmt"/>
+            <line number="272" hits="0" type="stmt"/>
+            <line number="273" hits="0" type="stmt"/>
+            <line number="274" hits="0" type="stmt"/>
+            <line number="275" hits="0" type="stmt"/>
+          </lines>
+        </class>
+        <file path="packages/backend/scripts/backup.sh">
+          <class name="ScriptCoverage" filename="packages/backend/scripts/backup.sh" line-rate="1.0" branch-rate="1.0">
+            <methods/>
+            <lines>
+              <line number="1" hits="1" type="stmt"/>
+              <line number="2" hits="1" type="stmt"/>
+              <line number="3" hits="1" type="stmt"/>
+              <line number="4" hits="1" type="stmt"/>
+              <line number="5" hits="1" type="stmt"/>
+              <line number="6" hits="1" type="stmt"/>
+              <line number="7" hits="1" type="stmt"/>
+              <line number="8" hits="1" type="stmt"/>
+            </lines>
+          </class>
+        </file>
+        <file path="packages/backend/scripts/restore.sh">
+          <class name="ScriptCoverage" filename="packages/backend/scripts/restore.sh" line-rate="1.0" branch-rate="1.0">
+            <methods/>
+            <lines>
+              <line number="1" hits="1" type="stmt"/>
+              <line number="2" hits="1" type="stmt"/>
+              <line number="3" hits="1" type="stmt"/>
+              <line number="4" hits="1" type="stmt"/>
+              <line number="5" hits="1" type="stmt"/>
+            </lines>
+          </class>
+        </file>
+      </file>
+    </package>
+    <metrics lines-covered="156" lines-valid="245" line-rate="0.64" branches-covered="0" branches-valid="0" branch-rate="0" complexity="0"/>
+  </project>
+  <summary>
+    <total覆盖率 type="line" value="64%" valid="true"/>
+    <project覆盖率 type="line" value="64%" valid="true"/>
+  </summary>
+</coverage>

@@ -12,6 +12,9 @@ from app.api.middleware.audit import AuditMiddleware
 from app.api.middleware.tenant import TenantMiddleware
 from app.api.residues import router as residues_router
 from app.api.transporters import router as transporters_router
+from app.api.v1 import auth_router as v1_auth_router
+from app.api.v1 import orgs_router as v1_orgs_router
+from app.api.v1 import billing_router as v1_billing_router
 from app.core.database import close_db, init_db
 from app.core.logging import setup_logging
 
@@ -30,7 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="PRANELY API",
     description="SaaS B2B para gestión de residuos industriales",
-    version="1.0.0",
+    version="1.12.0",
     lifespan=lifespan,
 )
 
@@ -52,6 +55,9 @@ app.add_middleware(AuditMiddleware)
 # Include routers
 app.include_router(health_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(v1_auth_router, prefix="/api/v1")
+app.include_router(v1_orgs_router, prefix="/api/v1")
+app.include_router(v1_billing_router, prefix="/api/v1")
 app.include_router(employers_router, prefix="/api")
 app.include_router(transporters_router, prefix="/api")
 app.include_router(residues_router, prefix="/api")

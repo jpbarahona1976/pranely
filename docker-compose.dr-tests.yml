@@ -1,0 +1,103 @@
+# =============================================================================
+# PRANELY - Docker Compose for DR Tests
+# Incluye PostgreSQL tools (pg_dump, pg_restore, psql) y Redis tools
+# =============================================================================
+
+services:
+  # -----------------------------------------------------------------------------
+  # PostgreSQL 16 - Base de datos
+  # -----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: pranely-postgres-dr
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pranely
+      POSTGRES_PASSWORD: pranely_dev_pass
+      POSTGRES_DB: pranely_dev
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dr_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pranely -d pranely_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pranely-dr-network
+
+  # -----------------------------------------------------------------------------
+  # Redis 7 - Cache y colas
+  # -----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: pranely-redis-dr
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_dr_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - pranely-dr-network
+
+  # -----------------------------------------------------------------------------
+  # DR Test Runner - Backend con PostgreSQL tools
+  # -----------------------------------------------------------------------------
+  dr-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.dr-tests
+    image: pranely-dr-tests:latest
+    container_name: pranely-dr-tests
+    environment:
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_USER: pranely
+      PG_DB: pranely_dev
+      POSTGRES_PASSWORD: pranely_dev_pass
+      PGPASSWORD: pranely_dev_pass
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PYTHONPATH: /app/packages/backend
+    volumes:
+      - ./packages/backend:/app/packages/backend
+      - ./packages/backend/tests:/app/packages/backend/tests
+      - ./backups:/backups
+      - ./audit-evidence:/app/audit-evidence
+      - ./scripts:/app/scripts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pranely-dr-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_dr_data:
+    name: pranely-dr-postgres-data
+  redis_dr_data:
+    name: pranely-dr-redis-data
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-dr-network:
+    name: pranely-dr-network
+    driver: bridge

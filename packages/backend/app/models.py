@@ -803,6 +803,44 @@ class WasteMovement(Base):
 
 
 # =============================================================================
+# WebhookEvent Model (Idempotency for Stripe webhooks)
+# =============================================================================
+
+
+class WebhookEvent(Base):
+    """
+    Webhook event store for idempotency.
+    
+    Stores processed Stripe webhook events to prevent duplicate processing.
+    Uses event_id as unique identifier per event type.
+    
+    Multi-tenancy: organization_id optional (some events may not have org context).
+    """
+    __tablename__ = "webhook_events"
+    __table_args__ = (
+        UniqueConstraint("event_id", "event_type", name="uq_webhook_event_id_type"),
+        Index("ix_webhook_event_stripe_customer", "stripe_customer_id"),
+    )
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    # Payload snapshot (for debugging/audit)
+    payload_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Processing status
+    processed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    # Result tracking
+    success: Mapped[bool] = mapped_column(Boolean, default=True)
+    error_message: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    
+    def __repr__(self) -> str:
+        return f"<WebhookEvent(id={self.id}, event_id='{self.event_id}', type='{self.event_type}')>"
+
+
+# =============================================================================
 # Add new relationships to Organization
 # =============================================================================
 

@@ -1,0 +1,62 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Projects\Pranely\packages\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Projects\Pranely\packages\backend
+configfile: pyproject.toml
+plugins: anyio-4.13.0, asyncio-0.24.0
+asyncio: mode=Mode.AUTO, default_loop_scope=None
+collecting ... collected 25 items
+
+packages\backend\tests\test_backup_dr.py::TestBackupAutomation::test_backup_script_exists PASSED [  4%]
+packages\backend\tests\test_backup_dr.py::TestBackupAutomation::test_backup_healthcheck_rpo_compliance PASSED [  8%]
+packages\backend\tests\test_backup_dr.py::TestBackupAutomation::test_backup_directory_structure PASSED [ 12%]
+packages\backend\tests\test_backup_dr.py::TestBackupAutomation::test_backup_retention_policy PASSED [ 16%]
+packages\backend\tests\test_backup_dr.py::TestBackupExecution::test_pg_dump_available SKIPPED [ 20%]
+packages\backend\tests\test_backup_dr.py::TestBackupExecution::test_redis_cli_available SKIPPED [ 24%]
+packages\backend\tests\test_backup_dr.py::TestBackupExecution::test_backup_postgres_creates_file SKIPPED [ 28%]
+packages\backend\tests\test_backup_dr.py::TestRestoreScript::test_restore_script_exists PASSED [ 32%]
+packages\backend\tests\test_backup_dr.py::TestRestoreScript::test_restore_writes_rto_duration_file PASSED [ 36%]
+packages\backend\tests\test_backup_dr.py::TestRestoreScript::test_dr_compose_file_exists PASSED [ 40%]
+packages\backend\tests\test_backup_dr.py::TestRestoreExecution::test_pg_restore_lists_backup SKIPPED [ 44%]
+packages\backend\tests\test_backup_dr.py::TestDRSimulation::test_dr_script_exists PASSED [ 48%]
+packages\backend\tests\test_backup_dr.py::TestDRSimulation::test_rpo_verification_logic PASSED [ 52%]
+packages\backend\tests\test_backup_dr.py::TestDRSimulation::test_rto_verification_logic PASSED [ 56%]
+packages\backend\tests\test_backup_dr.py::TestMultiTenantIntegrity::test_organization_id_in_backup SKIPPED [ 60%]
+packages\backend\tests\test_backup_dr.py::TestMultiTenantIntegrity::test_organization_id_not_null SKIPPED [ 64%]
+packages\backend\tests\test_backup_dr.py::TestMultiTenantRestore::test_scripts_filter_by_organization_id PASSED [ 68%]
+packages\backend\tests\test_backup_dr.py::TestMultiTenantRestore::test_healthcheck_validates_rpo_with_org_context PASSED [ 72%]
+packages\backend\tests\test_backup_dr.py::TestMultiTenantRestore::test_cross_tenant_restore_blocked_in_documentation PASSED [ 76%]
+packages\backend\tests\test_backup_dr.py::TestDocumentation::test_dr_plan_exists PASSED [ 80%]
+packages\backend\tests\test_backup_dr.py::TestDocumentation::test_dr_plan_has_rpo_rto PASSED [ 84%]
+packages\backend\tests\test_backup_dr.py::TestDocumentation::test_dr_plan_has_checklist PASSED [ 88%]
+packages\backend\tests\test_backup_dr.py::TestMonitoring::test_backup_log_directory PASSED [ 92%]
+packages\backend\tests\test_backup_dr.py::TestMonitoring::test_backup_reports_directory PASSED [ 96%]
+packages\backend\tests\test_backup_dr.py::TestBackupRestoreIntegration::test_backup_restore_cycle SKIPPED [100%]
+
+============================== warnings summary ===============================
+packages\backend\tests\test_backup_dr.py:176
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:176: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:250
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:250: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:338
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:338: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:368
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:368: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:507
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:507: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+packages\backend\tests\test_backup_dr.py:508
+  C:\Projects\Pranely\packages\backend\tests\test_backup_dr.py:508: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 18 passed, 7 skipped, 6 warnings in 1.91s ==================

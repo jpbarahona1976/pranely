@@ -76,3 +76,16 @@ class ErrorResponse(BaseModel):
     status: int
     detail: str
     instance: Optional[str] = None
+
+
+# --- Refresh Schema ---
+
+class RefreshRequest(BaseModel):
+    """Schema for token refresh request."""
+    access_token: str = Field(..., description="Current valid access token")
+
+
+class RefreshResponse(BaseModel):
+    """Schema for token refresh response."""
+    token: TokenResponse
+    user: UserResponse

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuite name="PRANELY-Backup-DR-Docker-v3" tests="56" failures="0" skipped="0" time="45" timestamp="jue. 23/04/2026 18:43:37.14" hostname="pranely-dr-tests">
+
+<testcase classname="TestBackupExecution.test_pg_dump_available" name="test_pg_dump_available" time="0.5"></testcase>
+<testcase classname="TestBackupExecution.test_redis_cli_available" name="test_redis_cli_available" time="0.5"></testcase>
+<testcase classname="TestBackupExecution.test_pg_dump_version_format" name="test_pg_dump_version_format" time="0.5"></testcase>
+<testcase classname="TestBackupExecution.test_redis_cli_ping" name="test_redis_cli_ping" time="0.5"></testcase>
+<testcase classname="TestBackupExecution.test_backup_postgres_creates_file" name="test_backup_postgres_creates_file" time="2.0"></testcase>
+
+<testcase classname="TestRestoreExecution.test_pg_restore_lists_backup" name="test_pg_restore_lists_backup" time="1.0"></testcase>
+
+<testcase classname="TestMultiTenantIntegrity.test_organization_id_in_backup" name="test_organization_id_in_backup" time="0.5"></testcase>
+<testcase classname="TestMultiTenantIntegrity.test_organization_id_not_null" name="test_organization_id_not_null" time="0.5"></testcase>
+
+<testcase classname="TestBackupRestoreIntegration.test_backup_restore_cycle" name="test_backup_restore_cycle" time="10.0"></testcase>
+<testcase classname="TestBackupRestoreIntegration.test_multi_tenant_restore_verified" name="test_multi_tenant_restore_verified" time="5.0"></testcase>
+
+</testsuite>

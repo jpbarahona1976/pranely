@@ -1,0 +1,37 @@
+# =============================================================================
+# PRANELY - Dockerfile for DR Tests (SIMPLIFIED)
+# Incluye PostgreSQL client tools y ejecuta tests DR directamente
+# =============================================================================
+
+FROM python:3.12.7-slim
+
+# Install PostgreSQL client tools, Redis tools, and pytest
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    redis-tools \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir pytest pytest-asyncio pytest-cov httpx aiosqlite
+
+WORKDIR /app
+
+# Copy project structure for tests
+COPY packages/backend/app /app/packages/backend/app
+COPY packages/backend/tests /app/packages/backend/tests
+COPY scripts /app/scripts
+COPY docs /app/docs
+COPY backups /backups
+COPY audit-evidence /app/audit-evidence
+
+# Set environment for tests
+ENV PYTHONPATH=/app/packages/backend
+ENV PRANELY_ROOT=/app
+ENV ENV=test
+ENV SECRET_KEY=test-secret-key-for-testing-only-32chars
+ENV DATABASE_URL=sqlite+aiosqlite:///file::memory:?cache=shared
+ENV REDIS_URL=redis://redis:6379
+ENV DEBUG=false
+
+# Run tests - all tests, not just integration
+# Exclude integration tests that require actual PostgreSQL
+CMD ["pytest", "packages/backend/tests/test_backup_dr.py", "-v", "--tb=short", "--ignore=packages/backend/tests/test_api_v1", "--ignore=packages/backend/tests/test_auth.py", "--ignore=packages/backend/tests/test_authz_tenant.py", "--ignore=packages/backend/tests/test_domain_models.py", "--ignore=packages/backend/tests/test_employers_api.py", "--ignore=packages/backend/tests/test_employer_transporter_links_api.py", "--ignore=packages/backend/tests/test_health.py", "--ignore=packages/backend/tests/test_multi_org_isolation.py", "--ignore=packages/backend/tests/test_residues_api.py", "--ignore=packages/backend/tests/test_security.py", "--ignore=packages/backend/tests/test_tokens.py", "--ignore=packages/backend/tests/test_transporters_api.py", "--ignore=packages/backend/tests/test_audit_trails.py", "-m", "not integration"]

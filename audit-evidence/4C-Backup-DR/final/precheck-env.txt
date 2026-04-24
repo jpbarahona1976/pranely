@@ -1,0 +1,6 @@
+# PRANELY PRECHECK ENTORNO
+# Fecha: 2026-04-26
+# Commit: f0ef99114ad252f7fec99c9536e055a852726149
+# Subfase: 4C Backup/DR
+
+=== DOCKER VERSION ===

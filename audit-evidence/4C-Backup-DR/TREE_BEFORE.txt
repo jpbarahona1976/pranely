@@ -1,0 +1,447 @@
+.agents/skills/alembic/EXAMPLES.md
+.agents/skills/alembic/README.md
+.agents/skills/alembic/SKILL.md
+.agents/skills/alembic/VERIFICATION.txt
+.agents/skills/api-designer/SKILL.md
+.agents/skills/api-designer/references/error-handling.md
+.agents/skills/api-designer/references/openapi.md
+.agents/skills/api-designer/references/pagination.md
+.agents/skills/api-designer/references/rest-patterns.md
+.agents/skills/api-designer/references/versioning.md
+.agents/skills/close-all/SKILL.md
+.agents/skills/code-review-security/SKILL.md
+.agents/skills/code-review-security/scripts/security-scan.py
+.agents/skills/create-auth-skill/SKILL.md
+.agents/skills/deployment-pipeline/SKILL.md
+.agents/skills/deployment-pipeline/references/environment-config.md
+.agents/skills/deployment-pipeline/references/github-actions-template.yml
+.agents/skills/deployment-pipeline/references/rollback-runbook.md
+.agents/skills/deployment-pipeline/scripts/deploy.sh
+.agents/skills/deployment-pipeline/scripts/health-check.py
+.agents/skills/deployment-pipeline/scripts/migration-dry-run.sh
+.agents/skills/deployment-pipeline/scripts/smoke-test.sh
+.agents/skills/fastapi-patterns/SKILL.md
+.agents/skills/fastapi-pro/SKILL.md
+.agents/skills/find-skills/SKILL.md
+.agents/skills/frontend-design/LICENSE.txt
+.agents/skills/frontend-design/SKILL.md
+.agents/skills/monitoring-observability/SKILL.md
+.agents/skills/monitoring-observability/assets/templates/otel-config/collector-config.yaml
+.agents/skills/monitoring-observability/assets/templates/prometheus-alerts/kubernetes-alerts.yml
+.agents/skills/monitoring-observability/assets/templates/prometheus-alerts/webapp-alerts.yml
+.agents/skills/monitoring-observability/assets/templates/runbooks/incident-runbook-template.md
+.agents/skills/monitoring-observability/references/alerting_best_practices.md
+.agents/skills/monitoring-observability/references/datadog_migration.md
+.agents/skills/monitoring-observability/references/dql_promql_translation.md
+.agents/skills/monitoring-observability/references/logging_guide.md
+.agents/skills/monitoring-observability/references/metrics_design.md
+.agents/skills/monitoring-observability/references/quick_commands.md
+.agents/skills/monitoring-observability/references/slo_sla_guide.md
+.agents/skills/monitoring-observability/references/tool_comparison.md
+.agents/skills/monitoring-observability/references/tracing_guide.md
+.agents/skills/monitoring-observability/scripts/alert_quality_checker.py
+.agents/skills/monitoring-observability/scripts/dashboard_generator.py
+.agents/skills/monitoring-observability/scripts/log_analyzer.py
+.agents/skills/monitoring-observability/scripts/slo_calculator.py
+.agents/skills/next-best-practices/SKILL.md
+.agents/skills/next-best-practices/async-patterns.md
+.agents/skills/next-best-practices/bundling.md
+.agents/skills/next-best-practices/data-patterns.md
+.agents/skills/next-best-practices/debug-tricks.md
+.agents/skills/next-best-practices/directives.md
+.agents/skills/next-best-practices/error-handling.md
+.agents/skills/next-best-practices/file-conventions.md
+.agents/skills/next-best-practices/font.md
+.agents/skills/next-best-practices/functions.md
+.agents/skills/next-best-practices/hydration-error.md
+.agents/skills/next-best-practices/image.md
+.agents/skills/next-best-practices/metadata.md
+.agents/skills/next-best-practices/parallel-routes.md
+.agents/skills/next-best-practices/route-handlers.md
+.agents/skills/next-best-practices/rsc-boundaries.md
+.agents/skills/next-best-practices/runtime-selection.md
+.agents/skills/next-best-practices/scripts.md
+.agents/skills/next-best-practices/self-hosting.md
+.agents/skills/next-best-practices/suspense-boundaries.md
+.agents/skills/nodejs-backend-patterns/SKILL.md
+.agents/skills/nodejs-backend-patterns/references/advanced-patterns.md
+.agents/skills/observability-engineer/SKILL.md
+.agents/skills/openapi-spec-generation/SKILL.md
+.agents/skills/openapi-spec-generation/references/code-first-and-tooling.md
+.agents/skills/playwright-best-practices/LICENSE.md
+.agents/skills/playwright-best-practices/README.md
+.agents/skills/playwright-best-practices/SKILL.md
+.agents/skills/playwright-best-practices/advanced/authentication-flows.md
+.agents/skills/playwright-best-practices/advanced/authentication.md
+.agents/skills/playwright-best-practices/advanced/clock-mocking.md
+.agents/skills/playwright-best-practices/advanced/mobile-testing.md
+.agents/skills/playwright-best-practices/advanced/multi-context.md
+.agents/skills/playwright-best-practices/advanced/multi-user.md
+.agents/skills/playwright-best-practices/advanced/network-advanced.md
+.agents/skills/playwright-best-practices/advanced/third-party.md
+.agents/skills/playwright-best-practices/architecture/pom-vs-fixtures.md
+.agents/skills/playwright-best-practices/architecture/test-architecture.md
+.agents/skills/playwright-best-practices/architecture/when-to-mock.md
+.agents/skills/playwright-best-practices/browser-apis/browser-apis.md
+.agents/skills/playwright-best-practices/browser-apis/iframes.md
+.agents/skills/playwright-best-practices/browser-apis/service-workers.md
+.agents/skills/playwright-best-practices/browser-apis/websockets.md
+.agents/skills/playwright-best-practices/core/annotations.md
+.agents/skills/playwright-best-practices/core/assertions-waiting.md
+.agents/skills/playwright-best-practices/core/configuration.md
+.agents/skills/playwright-best-practices/core/fixtures-hooks.md
+.agents/skills/playwright-best-practices/core/global-setup.md
+.agents/skills/playwright-best-practices/core/locators.md
+.agents/skills/playwright-best-practices/core/page-object-model.md
+.agents/skills/playwright-best-practices/core/projects-dependencies.md
+.agents/skills/playwright-best-practices/core/test-data.md
+.agents/skills/playwright-best-practices/core/test-suite-structure.md
+.agents/skills/playwright-best-practices/core/test-tags.md
+.agents/skills/playwright-best-practices/debugging/console-errors.md
+.agents/skills/playwright-best-practices/debugging/debugging.md
+.agents/skills/playwright-best-practices/debugging/error-testing.md
+.agents/skills/playwright-best-practices/debugging/flaky-tests.md
+.agents/skills/playwright-best-practices/frameworks/angular.md
+.agents/skills/playwright-best-practices/frameworks/nextjs.md
+.agents/skills/playwright-best-practices/frameworks/react.md
+.agents/skills/playwright-best-practices/frameworks/vue.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/ci-cd.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/docker.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/github-actions.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/gitlab.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/other-providers.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/parallel-sharding.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/performance.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/reporting.md
+.agents/skills/playwright-best-practices/infrastructure-ci-cd/test-coverage.md
+.agents/skills/playwright-best-practices/testing-patterns/accessibility.md
+.agents/skills/playwright-best-practices/testing-patterns/api-testing.md
+.agents/skills/playwright-best-practices/testing-patterns/browser-extensions.md
+.agents/skills/playwright-best-practices/testing-patterns/canvas-webgl.md
+.agents/skills/playwright-best-practices/testing-patterns/component-testing.md
+.agents/skills/playwright-best-practices/testing-patterns/drag-drop.md
+.agents/skills/playwright-best-practices/testing-patterns/electron.md
+.agents/skills/playwright-best-practices/testing-patterns/file-operations.md
+.agents/skills/playwright-best-practices/testing-patterns/file-upload-download.md
+.agents/skills/playwright-best-practices/testing-patterns/forms-validation.md
+.agents/skills/playwright-best-practices/testing-patterns/graphql-testing.md
+.agents/skills/playwright-best-practices/testing-patterns/i18n.md
+.agents/skills/playwright-best-practices/testing-patterns/performance-testing.md
+.agents/skills/playwright-best-practices/testing-patterns/security-testing.md
+.agents/skills/playwright-best-practices/testing-patterns/visual-regression.md
+.agents/skills/postgresql-database-engineering/EXAMPLES.md
+.agents/skills/postgresql-database-engineering/README.md
+.agents/skills/postgresql-database-engineering/SKILL.md
+.agents/skills/postgresql-database-engineering/VALIDATION.md
+.agents/skills/prd-development/SKILL.md
+.agents/skills/prd-development/examples/sample.md
+.agents/skills/prd-development/template.md
+.agents/skills/shadcn/SKILL.md
+.agents/skills/shadcn/agents/openai.yml
+.agents/skills/shadcn/assets/shadcn-small.png
+.agents/skills/shadcn/assets/shadcn.png
+.agents/skills/shadcn/cli.md
+.agents/skills/shadcn/customization.md
+.agents/skills/shadcn/evals/evals.json
+.agents/skills/shadcn/mcp.md
+.agents/skills/shadcn/rules/base-vs-radix.md
+.agents/skills/shadcn/rules/composition.md
+.agents/skills/shadcn/rules/forms.md
+.agents/skills/shadcn/rules/icons.md
+.agents/skills/shadcn/rules/styling.md
+.agents/skills/sw-analytics/SKILL.md
+.agents/skills/sw-github-issue-standard/SKILL.md
+.agents/skills/sw-multi-project/SKILL.md
+.agents/skills/sw-team-build/SKILL.md
+.agents/skills/systematic-debugging/CREATION-LOG.md
+.agents/skills/systematic-debugging/SKILL.md
+.agents/skills/systematic-debugging/condition-based-waiting-example.ts
+.agents/skills/systematic-debugging/condition-based-waiting.md
+.agents/skills/systematic-debugging/defense-in-depth.md
+.agents/skills/systematic-debugging/find-polluter.sh
+.agents/skills/systematic-debugging/root-cause-tracing.md
+.agents/skills/systematic-debugging/test-academic.md
+.agents/skills/systematic-debugging/test-pressure-1.md
+.agents/skills/systematic-debugging/test-pressure-2.md
+.agents/skills/systematic-debugging/test-pressure-3.md
+.devcontainer/devcontainer.json
+.github/CODEOWNERS
+.github/dependabot.yml
+.github/pull_request_template.md
+.github/workflows/ci-base.yml
+.github/workflows/ci-infra.yml
+.github/workflows/deploy-staging.yml
+.gitignore
+.gitleaks.toml
+.nvmrc
+.python-version
+CHANGELOG.md
+LICENSE
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/PRANELY - SISTEMA DOCUMENTAL MAESTRO FUSIÓN V1.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/alembic/EXAMPLES.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/alembic/README.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/alembic/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/alembic/VERIFICATION.txt
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/api-designer/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/api-designer/references/error-handling.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/api-designer/references/openapi.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/api-designer/references/pagination.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/api-designer/references/rest-patterns.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/api-designer/references/versioning.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/close-all/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/code-review-security/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/code-review-security/scripts/security-scan.py
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/create-auth-skill/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/references/environment-config.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/references/github-actions-template.yml
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/references/rollback-runbook.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/scripts/deploy.sh
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/scripts/health-check.py
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/scripts/migration-dry-run.sh
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/deployment-pipeline/scripts/smoke-test.sh
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/fastapi-patterns/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/fastapi-pro/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/find-skills/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/frontend-design/LICENSE.txt
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/frontend-design/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/assets/templates/otel-config/collector-config.yaml
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/assets/templates/prometheus-alerts/kubernetes-alerts.yml
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/assets/templates/prometheus-alerts/webapp-alerts.yml
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/assets/templates/runbooks/incident-runbook-template.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/alerting_best_practices.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/datadog_migration.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/dql_promql_translation.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/logging_guide.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/metrics_design.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/quick_commands.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/slo_sla_guide.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/tool_comparison.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/references/tracing_guide.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/scripts/alert_quality_checker.py
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/scripts/dashboard_generator.py
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/scripts/log_analyzer.py
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/monitoring-observability/scripts/slo_calculator.py
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/async-patterns.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/bundling.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/data-patterns.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/debug-tricks.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/directives.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/error-handling.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/file-conventions.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/font.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/functions.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/hydration-error.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/image.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/metadata.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/parallel-routes.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/route-handlers.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/rsc-boundaries.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/runtime-selection.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/scripts.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/self-hosting.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/next-best-practices/suspense-boundaries.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/nodejs-backend-patterns/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/nodejs-backend-patterns/references/advanced-patterns.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/observability-engineer/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/openapi-spec-generation/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/openapi-spec-generation/references/code-first-and-tooling.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/LICENSE.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/README.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/authentication-flows.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/authentication.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/clock-mocking.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/mobile-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/multi-context.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/multi-user.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/network-advanced.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/advanced/third-party.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/architecture/pom-vs-fixtures.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/architecture/test-architecture.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/architecture/when-to-mock.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/browser-apis/browser-apis.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/browser-apis/iframes.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/browser-apis/service-workers.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/browser-apis/websockets.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/annotations.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/assertions-waiting.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/configuration.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/fixtures-hooks.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/global-setup.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/locators.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/page-object-model.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/projects-dependencies.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/test-data.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/test-suite-structure.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/core/test-tags.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/debugging/console-errors.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/debugging/debugging.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/debugging/error-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/debugging/flaky-tests.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/frameworks/angular.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/frameworks/nextjs.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/frameworks/react.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/frameworks/vue.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/ci-cd.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/docker.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/github-actions.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/gitlab.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/other-providers.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/parallel-sharding.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/performance.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/reporting.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/infrastructure-ci-cd/test-coverage.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/accessibility.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/api-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/browser-extensions.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/canvas-webgl.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/component-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/drag-drop.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/electron.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/file-operations.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/file-upload-download.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/forms-validation.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/graphql-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/i18n.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/performance-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/security-testing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/playwright-best-practices/testing-patterns/visual-regression.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/postgresql-database-engineering/EXAMPLES.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/postgresql-database-engineering/README.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/postgresql-database-engineering/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/postgresql-database-engineering/VALIDATION.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/prd-development/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/prd-development/examples/sample.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/prd-development/template.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/agents/openai.yml
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/assets/shadcn-small.png
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/assets/shadcn.png
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/cli.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/customization.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/evals/evals.json
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/mcp.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/rules/base-vs-radix.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/rules/composition.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/rules/forms.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/rules/icons.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/shadcn/rules/styling.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/sw-analytics/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/sw-github-issue-standard/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/sw-multi-project/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/sw-team-build/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/CREATION-LOG.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/SKILL.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/condition-based-waiting-example.ts
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/condition-based-waiting.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/defense-in-depth.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/find-polluter.sh
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/root-cause-tracing.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/test-academic.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/test-pressure-1.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/test-pressure-2.md
+PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/skills/systematic-debugging/test-pressure-3.md
+README.md
+config/logging.yaml
+docker-compose.base.yml
+docker-compose.dev.yml
+docker-compose.prod.yml
+docker-compose.staging.yml
+docs/BASELINE.md
+docs/ERD.md
+docs/FASE-1B-DOMAIN-MODELS.md
+docs/NOM-151.md
+docs/contracts/api-contracts.md
+docs/decisions/ADR-0001-STACK-TECNOLOGICO.md
+docs/decisions/ADR-0002-STACK-ARQUITECTONICO-MVP.md
+docs/deploy/healthchecks.md
+docs/deploy/release-cadence.md
+docs/deploy/rollback-procedures.md
+docs/deploy/runbook-deploy.md
+docs/migrations/alembic-guide.md
+docs/security/secrets-management.md
+packages/backend/.env.production.example
+packages/backend/.gitignore
+packages/backend/Dockerfile
+packages/backend/alembic.ini
+packages/backend/alembic/env.py
+packages/backend/alembic/script.py.mako
+packages/backend/alembic/versions/.gitkeep
+packages/backend/alembic/versions/001_initial_baseline.py
+packages/backend/alembic/versions/README.md
+packages/backend/app/__init__.py
+packages/backend/app/api/__init__.py
+packages/backend/app/api/auth.py
+packages/backend/app/api/deps.py
+packages/backend/app/api/employer_transporter_links.py
+packages/backend/app/api/employers.py
+packages/backend/app/api/health.py
+packages/backend/app/api/middleware/__init__.py
+packages/backend/app/api/middleware/audit.py
+packages/backend/app/api/middleware/tenant.py
+packages/backend/app/api/org_deps.py
+packages/backend/app/api/residues.py
+packages/backend/app/api/transporters.py
+packages/backend/app/core/__init__.py
+packages/backend/app/core/audit.py
+packages/backend/app/core/config.py
+packages/backend/app/core/database.py
+packages/backend/app/core/logging.py
+packages/backend/app/core/security.py
+packages/backend/app/core/tokens.py
+packages/backend/app/main.py
+packages/backend/app/models.py
+packages/backend/app/schemas/api/__init__.py
+packages/backend/app/schemas/api/auth.py
+packages/backend/app/schemas/api/common.py
+packages/backend/app/schemas/api/employer.py
+packages/backend/app/schemas/api/link.py
+packages/backend/app/schemas/api/residue.py
+packages/backend/app/schemas/api/transporter.py
+packages/backend/app/schemas/auth.py
+packages/backend/app/schemas/domain.py
+packages/backend/poetry.lock
+packages/backend/pyproject.toml
+packages/backend/scripts/migrate.py
+packages/backend/scripts/verify_migrations.py
+packages/backend/tests/__init__.py
+packages/backend/tests/conftest.py
+packages/backend/tests/test_api_schemas.py
+packages/backend/tests/test_audit_trails.py
+packages/backend/tests/test_auth.py
+packages/backend/tests/test_authz_tenant.py
+packages/backend/tests/test_domain_models.py
+packages/backend/tests/test_employer_transporter_links_api.py
+packages/backend/tests/test_employers_api.py
+packages/backend/tests/test_health.py
+packages/backend/tests/test_multi_org_isolation.py
+packages/backend/tests/test_residues_api.py
+packages/backend/tests/test_security.py
+packages/backend/tests/test_tokens.py
+packages/backend/tests/test_transporters_api.py
+packages/frontend/.gitignore
+packages/frontend/Dockerfile
+packages/frontend/next-env.d.ts
+packages/frontend/next.config.js
+packages/frontend/package.json
+packages/frontend/postcss.config.js
+packages/frontend/src/app/dashboard/page.tsx
+packages/frontend/src/app/globals.css
+packages/frontend/src/app/layout.tsx
+packages/frontend/src/app/login/page.tsx
+packages/frontend/src/app/page.tsx
+packages/frontend/src/app/register/page.tsx
+packages/frontend/src/components/LoginForm.tsx
+packages/frontend/src/components/ProtectedRoute.tsx
+packages/frontend/src/components/RegisterForm.tsx
+packages/frontend/src/contexts/AuthContext.tsx
+packages/frontend/tailwind.config.js
+packages/frontend/tsconfig.json
+query
+scripts/deploy-staging.sh
+scripts/rollback.sh
+scripts/smoke-test.sh
+scripts/validate-local.sh
