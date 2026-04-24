@@ -9,12 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 5A: Auth/orgs/billing APIs base
 - [ ] 5B: Waste domain CRUD (residue movement, manifest)
 
 ### Completado
 
+- [x] 5A: Auth/orgs/billing APIs base ✅ **CIERRE DEFINITIVO**
 - [x] 4C: Backup/DR - RPO 1h / RTO 15min ✅ **FASE 4C BASELINE CONGELADA**
+
+---
+
+## [1.14.0] - 2026-04-26
+
+> **CIERRE DEFINITIVO FASE 5A - APROBADO LIMPIO** ✅
+> Auth/orgs/billing APIs base implementados con seguridad production-ready.
+> **Stripe checkout real | Webhook seguro | Seed planes**
+
+### Fixed
+
+#### Fase 5A: Fixes Críticos de Seguridad y Funcionalidad
+
+**FIX 1: Webhook sin fallback inseguro** (`app/api/v1/billing/webhook.py`)
+- Validación `ENV == "production"` antes de skip de signature
+- En producción sin `STRIPE_WEBHOOK_SECRET` → HTTP 500 con error claro
+- Añadido `tolerance=300` (5 min) para Clock Skew
+
+**FIX 2: API Key incorrecta en webhook** (`app/api/v1/billing/webhook.py`)
+- `stripe.api_key = settings.STRIPE_SECRET_KEY` (sk_live_... para API)
+- `STRIPE_WEBHOOK_SECRET` (whsec_...) solo para `construct_event`
+
+**FIX 3: Vinculación cliente nuevo en checkout** (`app/api/v1/billing/webhook.py`)
+- Fallback por `metadata.org_id` si no existe `stripe_customer_id`
+- Vinculación automática de nuevo customer a organización existente
+- Logs claros para debugging de webhook
+
+### Added
+
+#### Fase 5A: Checkout Real Stripe ✅
+
+**Real Stripe Checkout Session** (`app/api/v1/billing/router.py`)
+- Reemplazado mock UUID con `stripe.checkout.Session.create()`
+- Validación de `STRIPE_SECRET_KEY` antes de llamada a Stripe
+- Manejo de errores con logging y HTTPException apropiada
+- Metadata incluye `org_id` y `plan_code`
+
+**Configuración Stripe** (`app/core/config.py`)
+- Añadido `STRIPE_SECRET_KEY` para API calls
+- Añadido `FRONTEND_URL` para redirect URLs
+- Templates `.env.example` y `.env.production.example` actualizados
+
+#### Fase 5A: Seed Planes Default ✅
+
+**Script seed_plans.py** (`app/scripts/seed_plans.py`)
+- Planes: FREE (100 docs), PRO ($299/mes), ENTERPRISE ($999/mes)
+- Idempotente: no recrea si ya existe
+- Uso: `poetry run python app/scripts/seed_plans.py`
+
+### Security
+
+- ✅ Webhook production-safe (no fallback inseguro)
+- ✅ API key correcta para cada operación
+- ✅ 0 secrets hardcodeados
 
 ---
 
