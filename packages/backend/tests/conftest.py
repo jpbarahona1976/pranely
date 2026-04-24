@@ -91,6 +91,7 @@ CRITICAL_TABLES = [
     "residues",
     "employer_transporter_links",
     "audit_trails",
+    "waste_movements",  # FASE 5B: Waste movements table
 ]
 
 
@@ -108,6 +109,7 @@ async def truncate_tables(db_session: AsyncSession):
     # Order matters: tables with FK references should be truncated after their parents
     truncate_order = [
         "audit_trails",                    # Depends on users, organizations
+        "waste_movements",                  # FASE 5B: Depends on organizations
         "employer_transporter_links",      # Depends on employers, transporters, organizations
         "residues",                         # Depends on employers, transporters, organizations
         "memberships",                      # Depends on users, organizations

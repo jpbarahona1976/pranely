@@ -15,6 +15,7 @@ from app.api.transporters import router as transporters_router
 from app.api.v1 import auth_router as v1_auth_router
 from app.api.v1 import orgs_router as v1_orgs_router
 from app.api.v1 import billing_router as v1_billing_router
+from app.api.v1 import waste_router as v1_waste_router
 from app.core.database import close_db, init_db
 from app.core.logging import setup_logging
 
@@ -58,6 +59,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(v1_auth_router, prefix="/api/v1")
 app.include_router(v1_orgs_router, prefix="/api/v1")
 app.include_router(v1_billing_router, prefix="/api/v1")
+app.include_router(v1_waste_router, prefix="/api/v1")
 app.include_router(employers_router, prefix="/api")
 app.include_router(transporters_router, prefix="/api")
 app.include_router(residues_router, prefix="/api")

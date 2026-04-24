@@ -55,11 +55,17 @@ def extract_path_pattern(path: str) -> str:
         /api/employers/123 → employer
         /api/users/me → user
         /api/employers → employer
+        /api/v1/waste/123 → waste  (FIX: skip version prefix)
+        /api/v1/waste → waste
     """
     parts = path.strip("/").split("/")
     
     # Skip 'api' prefix
     if parts and parts[0] == "api":
+        parts = parts[1:]
+    
+    # Skip API version prefix (e.g., 'v1', 'v2')
+    if parts and parts[0] and parts[0][0] == 'v' and parts[0][1:].isdigit():
         parts = parts[1:]
     
     if not parts:
@@ -251,15 +257,26 @@ class AuditMiddleware(BaseHTTPMiddleware):
         resource_type = extract_path_pattern(path)
         
         # Extract resource ID from path if present
+        # FIX: Handle versioned paths like /api/v1/waste/123
         resource_id = None
         path_parts = [p for p in path.strip("/").split("/") if p]
-        if len(path_parts) >= 3 and path_parts[0] == "api":
-            # Check if last part looks like an ID
-            potential_id = path_parts[-1]
-            if potential_id.isdigit():
+        
+        # Filter out path segments that are not IDs
+        # Valid ID patterns: numeric (123) or UUID (with dashes)
+        potential_ids = []
+        for part in path_parts:
+            if part.isdigit():
+                potential_ids.append(part)
+            elif len(part) == 36 and part.count("-") == 4:
+                potential_ids.append(part)  # UUID
+        
+        # Use the last valid ID found (usually the resource ID)
+        # Skip 'stats', 'archive' etc. which are action names, not IDs
+        for potential_id in reversed(potential_ids):
+            # Don't use action names as IDs
+            if potential_id not in ("stats", "archive", "upload", "approve", "review"):
                 resource_id = potential_id
-            elif len(potential_id) == 36 and "-" in potential_id:
-                resource_id = potential_id  # UUID
+                break
         
         # Record start time
         import time

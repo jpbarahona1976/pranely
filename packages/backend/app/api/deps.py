@@ -433,3 +433,22 @@ async def get_current_active_organization(
         )
     
     return user, org
+
+
+async def get_user_role_from_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> str:
+    """
+    Extract user role from JWT token.
+    
+    Returns:
+        Role string from token claims, or 'member' as default fallback.
+    """
+    if credentials is None:
+        return "member"
+    
+    payload = decode_token(credentials.credentials)
+    if payload is None:
+        return "member"
+    
+    return payload.role or "member"

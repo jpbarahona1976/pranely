@@ -656,8 +656,10 @@ class WasteMovementBase(BaseModel):
 
 
 class WasteMovementCreate(WasteMovementBase):
-    """Schema for creating a WasteMovement."""
-    organization_id: int = Field(..., description="Organization ID")
+    """Schema for creating a WasteMovement.
+    
+    Note: organization_id is NOT required - it comes from the authenticated token.
+    """
 
 
 class WasteMovementUpdate(BaseModel):

@@ -755,8 +755,14 @@ class WasteMovement(Base):
     """
     __tablename__ = "waste_movements"
     __table_args__ = (
+        # FIX 5B-FIX-1: Unique constraint to prevent duplicate manifests per org/date
+        UniqueConstraint(
+            "organization_id", "manifest_number", "date",
+            name="uq_waste_movement_org_manifest_date"
+        ),
         Index("ix_waste_movement_org_timestamp", "organization_id", "created_at"),
         Index("ix_waste_movement_manifest", "manifest_number"),
+        Index("ix_waste_movement_org_status", "organization_id", "status"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
