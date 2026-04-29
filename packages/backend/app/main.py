@@ -12,6 +12,7 @@ from app.api.middleware.audit import AuditMiddleware
 from app.api.middleware.tenant import TenantMiddleware
 from app.api.residues import router as residues_router
 from app.api.transporters import router as transporters_router
+from app.api.bridge import router as bridge_router
 from app.api.v1 import auth_router as v1_auth_router
 from app.api.v1 import orgs_router as v1_orgs_router
 from app.api.v1 import billing_router as v1_billing_router
@@ -26,22 +27,27 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging(level="INFO", json_output=True)
     await init_db()
+    # Start bridge cleanup task
+    from app.api.bridge import start_cleanup_task
+    start_cleanup_task()
     yield
     # Shutdown
+    from app.api.bridge import stop_cleanup_task
+    stop_cleanup_task()
     await close_db()
 
 
 app = FastAPI(
     title="PRANELY API",
     description="SaaS B2B para gestión de residuos industriales",
-    version="1.12.0",
+    version="1.13.0",
     lifespan=lifespan,
 )
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend dev
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,6 +70,7 @@ app.include_router(employers_router, prefix="/api")
 app.include_router(transporters_router, prefix="/api")
 app.include_router(residues_router, prefix="/api")
 app.include_router(links_router, prefix="/api")
+app.include_router(bridge_router, prefix="/api")
 
 
 @app.get("/")
