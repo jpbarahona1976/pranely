@@ -1,4 +1,4 @@
-"""Root layout with AuthProvider."""
+// Root layout with AuthProvider.
 import type { Metadata } from "next";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";

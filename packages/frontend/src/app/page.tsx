@@ -1,4 +1,4 @@
-"""Home page with redirect based on auth state."""
+// Home page with redirect based on auth state.
 "use client";
 
 import { useEffect } from "react";

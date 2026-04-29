@@ -89,6 +89,10 @@ async def get_current_user(
     return user
 
 
+# Alias for backwards compatibility with imports
+get_current_active_user = get_current_user
+
+
 async def get_optional_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(
         HTTPBearer(auto_error=False)

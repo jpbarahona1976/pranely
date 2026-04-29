@@ -1,4 +1,4 @@
-"""Protected route wrapper component."""
+// Protected route wrapper component
 "use client";
 
 import { useRouter } from "next/navigation";

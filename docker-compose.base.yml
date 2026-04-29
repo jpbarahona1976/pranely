@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: pranely
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required - generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"}
       POSTGRES_DB: pranely_dev
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:

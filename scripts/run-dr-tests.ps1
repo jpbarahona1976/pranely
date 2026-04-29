@@ -15,6 +15,27 @@ $BackendDir = "$ProjectRoot\packages\backend"
 $EvidenceDir = "$ProjectRoot\audit-evidence\4C-Backup-DR"
 $Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 
+# =============================================================================
+# SECURE: Load secrets from environment or .env.local
+# Generate secrets with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+# =============================================================================
+if (-not $env:POSTGRES_PASSWORD) {
+    $envFile = "$ProjectRoot\.env.local"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            if ($_ -match "^POSTGRES_PASSWORD=(.+)$") {
+                $env:POSTGRES_PASSWORD = $matches[1]
+            }
+        }
+    }
+}
+
+if (-not $env:POSTGRES_PASSWORD) {
+    Write-Host "ERROR: POSTGRES_PASSWORD not set" -ForegroundColor Red
+    Write-Host "Set environment variable or create .env.local with POSTGRES_PASSWORD" -ForegroundColor Yellow
+    exit 1
+}
+
 # Crear directorio de evidencia
 $EvidenceRun = "$EvidenceDir\run_$Timestamp"
 New-Item -ItemType Directory -Force -Path $EvidenceRun | Out-Null
@@ -119,7 +140,7 @@ SELECT 'Seed data created: ' ||
 "@
 
     # Ejecutar seed SQL
-    $env:PGPASSWORD = "pranely_dev_pass"
+    $env:PGPASSWORD = $env:POSTGRES_PASSWORD
     docker compose -f docker-compose.base.yml exec -T postgres psql -U pranely -d pranely_dev -c "$seedSQL" 2>&1 | Tee-Object -FilePath "$EvidenceRun\seed_output.txt"
 }
 
@@ -131,7 +152,7 @@ Write-Host "[4/6] Ejecutando backup PostgreSQL..." -ForegroundColor Yellow
 $backupFile = "$ProjectRoot\backups\$((Get-Date).ToString('yyyy/MM/dd'))/postgres_test_$Timestamp.dump"
 New-Item -ItemType Directory -Force -Path (Split-Path $backupFile) | Out-Null
 
-$env:PGPASSWORD = "pranely_dev_pass"
+$env:PGPASSWORD = $env:POSTGRES_PASSWORD
 docker compose -f docker-compose.base.yml exec -T postgres pg_dump -U pranely -d pranely_dev -Fc -f "/backups/postgres_test_$Timestamp.dump" 2>&1 | Tee-Object -FilePath "$EvidenceRun\backup_output.txt"
 
 # Copiar backup al host
@@ -153,7 +174,7 @@ if (Test-Path $backupFile) {
 Write-Host "[5/6] Ejecutando tests de backup/DR..." -ForegroundColor Yellow
 
 # Verificar qué tablas existen
-$env:PGPASSWORD = "pranely_dev_pass"
+$env:PGPASSWORD = $env:POSTGRES_PASSWORD
 docker compose -f docker-compose.base.yml exec -T postgres psql -U pranely -d pranely_dev -c "\dt" 2>&1 | Tee-Object -FilePath "$EvidenceRun\schema_tables.txt"
 
 # Verificar datos por tenant
