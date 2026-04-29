@@ -9,14 +9,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 6C: Review Queue UI (cola de revisión)
-- [ ] 7A: Worker resilient (RQ/tasks/scheduler)
+- [ ] 8B: Command Center (dashboard extendido)
+- [ ] 9A: Notificaciones push
 
 ### Completado
 
+- [x] 8A: Mobile Bridge ✅ **2026-04-28**
 - [x] 6B: Dashboard KPIs + tabla + polling (Glassmorphism) ✅ **AUDITORÍA CERRADA 2026-05-03**
 - [x] Fix: Docstrings Python en archivos TSX → comentarios JS ✅ **2026-05-03**
 - [x] 6A: Layout/navegación/i18n (estado previo)
+
+---
+
+## [1.20.0] - 2026-04-28 - FASE 8A MOBILE BRIDGE ✅
+
+> **MOBILE BRIDGE - QR SESSION + WEBSOCKET REALTIME + PWA** ✅
+> Puente móvil para sincronización en tiempo real de escaneos QR.
+
+### Backend
+
+#### API Endpoints
+- `POST /api/bridge/session` - Crear sesión QR temporal (5 min)
+- `GET /api/bridge/session/{qr_token}` - Estado de sesión
+- `POST /api/bridge/session/{qr_token}/extend` - Extender sesión
+- `DELETE /api/bridge/session/{qr_token}` - Cerrar sesión
+- `WS /ws/bridge/{session_id}` - WebSocket realtime
+
+#### Características
+- Token JWT temporal limitado para bridge (5 min expiry)
+- Auth JWT con claims mínimos (sub, org_id, session_id, type=bridge)
+- Tenant isolation por organization_id
+- RBAC: owner/admin/member pueden crear, viewer no
+- Cleanup periódico de sesiones expiradas
+- Logging correlacionado con session_id
+- Manejo explícito de errores y cierre limpio
+
+### Frontend
+
+#### Páginas
+- `app/bridge/page.tsx` - Mobile-first (375px) bridge interface
+
+#### Componentes
+| Componente | Descripción |
+|-----------|-------------|
+| `QRScanner.tsx` | Escáner con getUserMedia + jsqr |
+| `BridgeStatus.tsx` | StatusBadge + StatusBar glassmorphism |
+| `lib/bridge-api.ts` | API client + WS client con reconnect |
+
+#### Características
+- QR Scanner live con cámara del dispositivo
+- Cliente WebSocket con reconnect backoff exponencial
+- Estados visuales: conectado, syncing, offline, expirado, error
+- Bottom glass bar: Scan / Manual / Sync
+- Offline queue con localStorage
+- Responsive: mobile (375px) → tablet (768px) → desktop (1280px)
+- Estilo Glassmorphism exacto: bg-white/5, backdrop-blur-md
+
+### PWA
+
+#### Archivos
+- `public/manifest.json` - PWA manifest para bridge
+- `public/sw-bridge.js` - Service worker básico
+
+#### Funcionalidades
+- Cache de assets estáticos
+- Offline shell para /bridge
+- Background sync para cola offline
+- Push notifications (preparado)
+
+### Tests
+
+- `tests/test_bridge.py` - Unit + integration tests
+- `e2e/bridge.spec.ts` - E2E playwright tests
+
+### Criterios Terminados 8A
+
+- [x] POST /api/bridge/session con auth + tenant isolation
+- [x] WS /ws/bridge/{session_id} con validación + reconnect
+- [x] /bridge existe con Glassmorphism
+- [x] QR scanner live con jsqr
+- [x] Estados visuales bridge
+- [x] Offline queue local
+- [x] PWA mínimo
+- [x] Tests nuevos
+- [x] No BYPASS auth
+- [x] No hardcoded secrets
 
 ---
 
