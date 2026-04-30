@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Próximas tareas
 
-- [ ] 8B: Command Center (dashboard extendido)
 - [ ] 9A: Notificaciones push
 
 ### Completado
@@ -22,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [1.20.0] - 2026-04-28 - FASE 8A MOBILE BRIDGE ✅
+
+- 8B: Command Center (dashboard extendido)
 
 > **MOBILE BRIDGE - QR SESSION + WEBSOCKET REALTIME + PWA** ✅
 > Puente móvil para sincronización en tiempo real de escaneos QR.
