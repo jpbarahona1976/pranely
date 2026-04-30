@@ -3,6 +3,7 @@ RQ Worker configuration and queues for PRANELY.
 
 Subfase 7A: Worker resilient con retries, backoff, timeouts y DLQ.
 """
+import os
 from enum import Enum
 
 
@@ -63,26 +64,43 @@ class TimeoutPolicy:
 
 
 class WorkerConfig:
-    """RQ worker configuration."""
-    
-    # Connection settings
-    REDIS_URL = "redis://localhost:6379"
-    
-    # Worker settings
-    DEFAULT_RESULT_TTL = 3600  # 1 hour
-    JOB_MONITORING_INTERVAL = 60  # seconds
-    MAX_JOB_DURATION = 1800  # 30 minutos (seguridad)
-    
-    # Queue configuration
+    """
+    RQ worker configuration — PRANELY Phase 7A.
+
+    Valores justificados:
+    - DEFAULT_TIMEOUT=3600: 1h max por job (RQ default 360s es muy corto para IA)
+    - DEFAULT_RESULT_TTL=3600: resultados disponibles 1h post-completado
+    - MAX_JOB_DURATION=1800: 30min hard limit para seguridad anti-stuck
+    - HEARTBEAT_TIMEOUT=600: 10min sin heartbeat = worker considerado dead
+    - JOB_MONITORING_INTERVAL=60: scheduler revisa cada 60s
+
+    Atributos usados por:
+    - runner.py: REDIS_URL, MAX_JOB_DURATION, DEFAULT_TIMEOUT,
+                DEFAULT_RESULT_TTL, HEARTBEAT_TIMEOUT, JOB_MONITORING_INTERVAL
+    - __init__.py: REDIS_URL, DEFAULT_QUEUE
+    """
+
+    # Connection
+    REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
+
+    # Job timeouts (segundos)
+    DEFAULT_TIMEOUT = 3600          # 1h — max por job (RQ default 360s muy corto para IA)
+    MAX_JOB_DURATION = 1800         # 30min — hard limit seguridad anti-stuck
+
+    # Result & worker TTL (segundos)
+    DEFAULT_RESULT_TTL = 3600       # 1h — resultados disponibles post-completado
+    HEARTBEAT_TIMEOUT = 600         # 10min — sin latido = worker dead
+
+    # Scheduler
+    JOB_MONITORING_INTERVAL = 60   # segundos entre revisiones del scheduler
+
+    # Queue defaults
     DEFAULT_QUEUE = QueueNames.DEFAULT
     AI_QUEUE = QueueNames.AI_PROCESSING
-    
-    # DLQ settings
+
+    # DLQ
     FAILED_QUEUE = QueueNames.FAILED
-    FAILED_JOBS_TTL = 7 * 24 * 3600  # 7 días
-    
-    # Monitoring
-    HEARTBEAT_TIMEOUT = 600  # 10 minutos sin heartbeat = stuck
+    FAILED_JOBS_TTL = 7 * 24 * 3600  # 7 días — jobs fallidos retenidos
 
 
 class QueueConfig:

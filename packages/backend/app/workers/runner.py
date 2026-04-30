@@ -56,28 +56,34 @@ def create_worker(
     if name is None:
         name = f"pranely-worker-{os.uname().nodename}"
     
-    # Create Redis connection
+    # Create Redis connection para RQ worker
+    # Fix B10: socket_timeout 5s default es muy agresivo para Docker heartbeat
+    # heartbeat RQ 1860s + Docker network latency >5s = timeout crash cada 31min
     redis_conn = Redis.from_url(
         redis_url,
-        decode_responses=True,
-        socket_timeout=5,
-        socket_connect_timeout=5,
+        socket_timeout=120,              # 2min vs 5s default (permite heartbeat ops largas)
+        socket_connect_timeout=30,        # 30s para conectar en Docker
+        socket_keepalive=True,           # mantiene conexion viva en Docker networking
+        retry_on_timeout=True,           # reintenta en caso de timeout transitorio
+        health_check_interval=60,        # ping cada 60s para detectar conexion muerta
     )
     
-    # Create queues
-    queue_objects = [Queue(q) for q in queues]
+    # Create queues con connection explícita (RQ 1.16.2 requiere connection en Queue())
+    queue_objects = [Queue(q, connection=redis_conn) for q in queues]
     
-    # Create worker with observability
+    # Create worker with observabilidad
+    # Compatibilidad RQ 1.16.2 (Docker) y RQ 2.8.0 (local):
+    # - worker_ttl: SOLO RQ 2.8.0 (no existe en 1.16.2) -> NO USAR
+    # - default_worker_ttl: existe en ambas (en 2.8.0 es deprecated -> usar worker_ttl en 2.8.0)
+    # - default_result_ttl: existe en ambas
     worker = Worker(
         queue_objects,
         connection=redis_conn,
         name=name,
         default_worker_ttl=WorkerConfig.MAX_JOB_DURATION,
-        job_timeout=WorkerConfig.DEFAULT_TIMEOUT,
-        result_ttl=WorkerConfig.DEFAULT_RESULT_TTL,
-        worker_ttl=WorkerConfig.HEARTBEAT_TIMEOUT,
+        default_result_ttl=WorkerConfig.DEFAULT_RESULT_TTL,
     )
-    
+
     return worker
 
 
@@ -89,18 +95,21 @@ def get_queue_stats() -> dict:
         Dict con stats por cola
     """
     try:
-        redis_conn = Redis.from_url(WorkerConfig.REDIS_URL, decode_responses=True)
-        
-        stats = {}
+        redis_conn = Redis.from_url(
+            WorkerConfig.REDIS_URL,
+            socket_timeout=120,
+            socket_connect_timeout=30,
+            socket_keepalive=True,
+            retry_on_timeout=True,
+        )
         for queue_name in [q.value for q in QUEUES]:
             queue = Queue(queue_name, connection=redis_conn)
             stats[queue_name] = {
                 "jobs": queue.count,
-                "failed": 0,  # RQ no expone failed count directamente
+                "failed": 0,
                 "workers": len(queue.get_workers()),
             }
-        
-        # Get failed jobs from failed queue
+
         failed_queue = Queue(QueueNames.FAILED.value, connection=redis_conn)
         stats["failed"] = {
             "total": failed_queue.count,
@@ -125,7 +134,13 @@ def get_failed_jobs(limit: int = 10) -> list:
         Lista de dicts con info de jobs fallidos
     """
     try:
-        redis_conn = Redis.from_url(WorkerConfig.REDIS_URL, decode_responses=True)
+        redis_conn = Redis.from_url(
+            WorkerConfig.REDIS_URL,
+            socket_timeout=120,
+            socket_connect_timeout=30,
+            socket_keepalive=True,
+            retry_on_timeout=True,
+        )
         failed_queue = Queue(QueueNames.FAILED.value, connection=redis_conn)
         
         failed_jobs = []
@@ -215,9 +230,11 @@ def run_worker(
     log_worker_status(worker)
     
     # Run worker
+    # RQ 2.8.0: log_level -> logging_level (API change en 2.x)
+    # RQ 1.16.2: log_level (old name, no existe en 2.8.0)
     worker.work(
         with_scheduler=True,
-        log_level="DEBUG" if verbose else "INFO",
+        logging_level="DEBUG" if verbose else "INFO",
     )
 
 
@@ -230,7 +247,13 @@ def run_scheduler() -> None:
     from rq.scheduler import RQScheduler
     
     scheduler = RQScheduler(
-        connection=Redis.from_url(WorkerConfig.REDIS_URL),
+        connection=Redis.from_url(
+            WorkerConfig.REDIS_URL,
+            socket_timeout=120,
+            socket_connect_timeout=30,
+            socket_keepalive=True,
+            retry_on_timeout=True,
+        ),
         interval=WorkerConfig.JOB_MONITORING_INTERVAL,
     )
     

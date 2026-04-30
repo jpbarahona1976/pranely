@@ -673,3 +673,70 @@ async def export_audit_trails(
     }
     
     return export_data
+
+
+# =============================================================================
+# Compatibility Alias for Command Center (Blocker B2 Fix)
+# =============================================================================
+# Wrapper que mapea la firma legacy de create_audit_log (usada en router.py)
+# a la firma actual de record_audit_event.
+# Parámetros router.py: db, org_id, user_id, action, resource_type, resource_id, result, details
+# Parámetros audit.py: organization_id, user_id, action (AuditAction), resource_type, resource_id, severity, metadata
+
+
+async def create_audit_log(
+    db,
+    org_id: int,
+    user_id: int,
+    action: str,
+    resource_type: str,
+    resource_id: Optional[int] = None,
+    result: Optional[Any] = None,
+    details: Optional[Dict[str, Any]] = None,
+) -> AuditTrailModel:
+    """
+    Alias de compatibilidad para Command Center (router.py).
+
+    Mapea la firma legacy (usada en v1/command/router.py líneas 330, 378, 499, 596, 719, 858, 999)
+    a la firma actual de record_audit_event.
+
+    Args:
+        db: Session SQLAlchemy (no usada directamente, abierta internamente)
+        org_id: ID de organización
+        user_id: ID de usuario
+        action: String de acción (ej: "operator.invite_existing")
+        resource_type: Tipo de recurso (ej: "membership", "organization")
+        resource_id: ID del recurso
+        result: AuditLogResult o string (mapeado a severity)
+        details: Diccionario de detalles adicionales (mapeado a metadata)
+
+    Returns:
+        AuditTrailModel creado
+    """
+    # Mapear AuditLogResult → AuditSeverity
+    severity = AuditSeverity.INFO
+    if result is not None:
+        result_str = str(result) if not isinstance(result, str) else result
+        if "success" in result_str.lower():
+            severity = AuditSeverity.INFO
+        elif "fail" in result_str.lower():
+            severity = AuditSeverity.ERROR
+        elif "warn" in result_str.lower():
+            severity = AuditSeverity.WARN
+
+    # Convertir action string → AuditAction enum
+    action_enum = AuditAction.CREATE  # default
+    for a in AuditAction:
+        if a.value == action or a.value == action.split(".")[-1]:
+            action_enum = a
+            break
+
+    return await record_audit_event(
+        organization_id=org_id,
+        user_id=user_id,
+        action=action_enum,
+        resource_type=resource_type,
+        resource_id=str(resource_id) if resource_id is not None else None,
+        severity=severity,
+        metadata=details,
+    )

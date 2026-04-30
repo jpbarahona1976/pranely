@@ -101,10 +101,18 @@ __all__ = [
 # =============================================================================
 
 def get_redis_connection():
-    """Obtiene conexión Redis para encolar jobs."""
+    """Obtiene conexión Redis para encolar jobs RQ."""
     from redis import Redis
     from app.workers.config import WorkerConfig
-    return Redis.from_url(WorkerConfig.REDIS_URL, decode_responses=True)
+    # NO decode_responses=True: corrompe datos pickle de RQ (bytes -> strings)
+    # Fix B10: socket_timeout 120s para evitar timeout en Docker heartbeat
+    return Redis.from_url(
+        WorkerConfig.REDIS_URL,
+        socket_timeout=120,
+        socket_connect_timeout=30,
+        socket_keepalive=True,
+        retry_on_timeout=True,
+    )
 
 
 def enqueue_task(

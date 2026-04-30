@@ -131,7 +131,7 @@ services:
     image: pranely-worker:dev
     container_name: pranely-worker
     restart: unless-stopped
-    command: python -m app.workers.runner --verbose
+    command: sh -c "poetry install --no-interaction && poetry run python -m app.workers.runner --verbose"
     env_file:
       - packages/backend/.env
     environment:
