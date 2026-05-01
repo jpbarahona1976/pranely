@@ -89,4 +89,4 @@ packages/backend/test_import.py
 packages/backend/validate_*.py
 scratch_*.py
 test_import.py
-validate_*.py
+validate_*.py\"packages/frontend/.pnpm-store\"  
