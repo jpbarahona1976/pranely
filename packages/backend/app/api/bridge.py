@@ -2,6 +2,7 @@
 # Session QR + realtime sync para app móvil
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
@@ -10,6 +11,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Request
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
+import redis.asyncio as redis
 
 from app.api.deps import get_current_active_user, get_current_active_admin
 from app.core.config import settings
@@ -25,15 +27,74 @@ from app.schemas.bridge import (
 
 logger = logging.getLogger("pranely.bridge")
 
-router = APIRouter(prefix="/api/bridge", tags=["bridge"])
-
-# In-memory session store (production: use Redis with TTL)
-bridge_sessions: dict[str, dict] = {}
-active_websockets: dict[str, WebSocket] = {}
+router = APIRouter(prefix="/bridge", tags=["bridge"])
 
 # Token config for bridge WS
 BRIDGE_TOKEN_EXPIRY_MINUTES = 5
+BRIDGE_SESSION_TTL = BRIDGE_TOKEN_EXPIRY_MINUTES * 60  # Redis TTL in seconds
 BRIDGE_ALGORITHM = "HS256"
+
+# Redis key prefixes
+BRIDGE_SESSION_PREFIX = "pranely:bridge:session:"
+BRIDGE_WS_PREFIX = "pranely:bridge:ws:"
+
+
+async def _get_redis() -> redis.Redis:
+    """Get Redis client for bridge sessions."""
+    return redis.from_url(settings.REDIS_URL, decode_responses=True)
+
+
+async def _store_session(qr_token: str, session_data: dict) -> None:
+    """Store session in Redis with TTL."""
+    r = await _get_redis()
+    key = f"{BRIDGE_SESSION_PREFIX}{qr_token}"
+    # Serialize datetime objects
+    serializable = {
+        k: v.isoformat() if isinstance(v, datetime) else v
+        for k, v in session_data.items()
+    }
+    await r.setex(key, BRIDGE_SESSION_TTL, json.dumps(serializable))
+
+
+async def _get_session(qr_token: str) -> Optional[dict]:
+    """Get session from Redis."""
+    r = await _get_redis()
+    key = f"{BRIDGE_SESSION_PREFIX}{qr_token}"
+    data = await r.get(key)
+    if data:
+        return json.loads(data)
+    return None
+
+
+async def _delete_session(qr_token: str) -> None:
+    """Delete session from Redis."""
+    r = await _get_redis()
+    key = f"{BRIDGE_SESSION_PREFIX}{qr_token}"
+    await r.delete(key)
+
+
+async def _store_ws_session(session_id: str, ws_data: dict) -> None:
+    """Store WebSocket session data."""
+    r = await _get_redis()
+    key = f"{BRIDGE_WS_PREFIX}{session_id}"
+    await r.setex(key, BRIDGE_SESSION_TTL, json.dumps(ws_data))
+
+
+async def _get_ws_session(session_id: str) -> Optional[dict]:
+    """Get WebSocket session data."""
+    r = await _get_redis()
+    key = f"{BRIDGE_WS_PREFIX}{session_id}"
+    data = await r.get(key)
+    if data:
+        return json.loads(data)
+    return None
+
+
+async def _delete_ws_session(session_id: str) -> None:
+    """Delete WebSocket session data."""
+    r = await _get_redis()
+    key = f"{BRIDGE_WS_PREFIX}{session_id}"
+    await r.delete(key)
 
 
 def _create_bridge_token(session_id: str, user_id: int, org_id: int) -> str:
@@ -90,8 +151,8 @@ async def create_bridge_session(
     # Create bridge token for WS auth
     ws_token = _create_bridge_token(session_id, user.id, org_id)
     
-    # Store session with tenant isolation
-    bridge_sessions[qr_token] = {
+    # Store session in Redis with TTL
+    session_data = {
         "session_id": session_id,
         "user_id": user.id,
         "org_id": org_id,
@@ -102,6 +163,7 @@ async def create_bridge_session(
         "scanned_count": 0,
         "created_at": datetime.utcnow(),
     }
+    await _store_session(qr_token, session_data)
     
     # Build WS URL based on environment
     ws_base = settings.API_URL.replace("http", "ws") if hasattr(settings, "API_URL") else "ws://localhost:8000"
@@ -127,7 +189,7 @@ async def get_bridge_session_status(
     user: User = Depends(get_current_active_user),
 ):
     """Verificar estado de una sesión QR."""
-    session = bridge_sessions.get(qr_token)
+    session = await _get_session(qr_token)
     
     if not session:
         raise HTTPException(404, "Sesión no encontrada")
@@ -143,7 +205,7 @@ async def get_bridge_session_status(
         session_id=session["session_id"],
         status="expired" if is_expired else ("connected" if session["connected"] else "waiting"),
         scanned_count=session["scanned_count"],
-        expires_at=session["expires_at"],
+        expires_at=datetime.fromisoformat(session["expires_at"]) if isinstance(session["expires_at"], str) else session["expires_at"],
         is_expired=is_expired,
     )
 
@@ -154,7 +216,7 @@ async def extend_bridge_session(
     user: User = Depends(get_current_active_user),
 ):
     """Extender sesión QR por 5 minutos más."""
-    session = bridge_sessions.get(qr_token)
+    session = await _get_session(qr_token)
     
     if not session:
         raise HTTPException(404, "Sesión no encontrada")
@@ -165,13 +227,15 @@ async def extend_bridge_session(
     if session["connected"]:
         raise HTTPException(400, "No se puede extender sesión mientras está conectada")
     
-    session["expires_at"] = datetime.utcnow() + timedelta(minutes=BRIDGE_TOKEN_EXPIRY_MINUTES)
+    new_expires = datetime.utcnow() + timedelta(minutes=BRIDGE_TOKEN_EXPIRY_MINUTES)
+    session["expires_at"] = new_expires
+    await _store_session(qr_token, session)
     
-    logger.info(f"Bridge session extended: qr_token={qr_token}, new_expires={session['expires_at']}")
+    logger.info(f"Bridge session extended: qr_token={qr_token}, new_expires={new_expires}")
     
     return BridgeSessionExtendResponse(
         status="extended",
-        expires_at=session["expires_at"],
+        expires_at=new_expires,
     )
 
 
@@ -181,7 +245,7 @@ async def close_bridge_session(
     user: User = Depends(get_current_active_user),
 ):
     """Cerrar sesión QR."""
-    session = bridge_sessions.get(qr_token)
+    session = await _get_session(qr_token)
     
     if not session:
         raise HTTPException(404, "Sesión no encontrada")
@@ -191,16 +255,13 @@ async def close_bridge_session(
     
     # Clean up websocket if active
     session_id = session["session_id"]
-    if session_id in active_websockets:
-        try:
-            await active_websockets[session_id].close(code=1000, reason="Session closed by user")
-        except Exception as e:
-            logger.warning(f"Error closing websocket for session {session_id}: {e}")
-        finally:
-            if session_id in active_websockets:
-                del active_websockets[session_id]
+    ws_session = await _get_ws_session(session_id)
+    if ws_session and ws_session.get("websocket_active"):
+        # Note: Actual WS closure handled by the WS endpoint itself
+        pass
     
-    del bridge_sessions[qr_token]
+    await _delete_session(qr_token)
+    await _delete_ws_session(session_id)
     logger.info(f"Bridge session closed: qr_token={qr_token}")
     
     return BridgeSessionCloseResponse()
@@ -238,14 +299,22 @@ async def bridge_websocket(websocket: WebSocket, session_id: str):
         await websocket.close(code=4003, reason="Sesión no coincide")
         return
     
-    # Find session by ID (not QR token)
+    # Find session by ID (not QR token) - search all sessions
+    # This requires iterating through Redis keys
+    r = await _get_redis()
     session = None
     qr_token = None
-    for qt, sess in bridge_sessions.items():
-        if sess["session_id"] == session_id:
-            session = sess
-            qr_token = qt
-            break
+    expires_at_str = None
+    
+    async for key in r.scan_iter(match=f"{BRIDGE_SESSION_PREFIX}*"):
+        data = await r.get(key)
+        if data:
+            sess_data = json.loads(data)
+            if sess_data.get("session_id") == session_id:
+                session = sess_data
+                qr_token = key.replace(BRIDGE_SESSION_PREFIX, "")
+                expires_at_str = sess_data.get("expires_at")
+                break
     
     if not session:
         logger.warning(f"WS bridge rejected: session not found, session_id={session_id}")
@@ -253,15 +322,19 @@ async def bridge_websocket(websocket: WebSocket, session_id: str):
         return
     
     # Check expiration
-    if datetime.utcnow() > session["expires_at"]:
+    expires_at = datetime.fromisoformat(expires_at_str) if isinstance(expires_at_str, str) else expires_at_str
+    if datetime.utcnow() > expires_at:
         logger.warning(f"WS bridge rejected: session expired, session_id={session_id}")
         await websocket.close(code=4010, reason="Sesión expirada")
         return
     
     # Accept connection
     await websocket.accept()
-    active_websockets[session_id] = websocket
+    
+    # Update session as connected in Redis
     session["connected"] = True
+    await _store_session(qr_token, session)
+    await _store_ws_session(session_id, {"websocket_active": True})
     
     logger.info(f"WS bridge connected: session_id={session_id}, user_id={payload['sub']}, request_id={request_id}")
     
@@ -289,8 +362,11 @@ async def bridge_websocket(websocket: WebSocket, session_id: str):
                 
                 if msg_type == "scan":
                     # Mobile scanned a QR/document
-                    session["scanned_count"] += 1
+                    session["scanned_count"] = session.get("scanned_count", 0) + 1
                     session["last_sync"] = datetime.utcnow()
+                    
+                    # Update in Redis
+                    await _store_session(qr_token, session)
                     
                     await websocket.send_json({
                         "type": "scan_ack",
@@ -306,8 +382,8 @@ async def bridge_websocket(websocket: WebSocket, session_id: str):
                         "type": "sync_response",
                         "data": {
                             "session_id": session_id,
-                            "scanned_count": session["scanned_count"],
-                            "last_sync": session["last_sync"].isoformat() if session["last_sync"] else None,
+                            "scanned_count": session.get("scanned_count", 0),
+                            "last_sync": session.get("last_sync"),
                             "server_time": datetime.utcnow().isoformat(),
                         }
                     })
@@ -328,10 +404,11 @@ async def bridge_websocket(websocket: WebSocket, session_id: str):
     except Exception as e:
         logger.error(f"WS bridge error: session_id={session_id}, error={e}")
     finally:
-        # Cleanup
+        # Cleanup - update session in Redis
         session["connected"] = False
-        if session_id in active_websockets:
-            del active_websockets[session_id]
+        if qr_token:
+            await _store_session(qr_token, session)
+        await _delete_ws_session(session_id)
         logger.info(f"WS bridge cleanup: session_id={session_id}")
 
 
@@ -341,34 +418,34 @@ _cleanup_task: Optional[asyncio.Task] = None
 
 async def _cleanup_expired_sessions_periodic():
     """Periodic cleanup of expired sessions."""
+    r = await _get_redis()
     while True:
         try:
             await asyncio.sleep(60)  # Check every minute
             now = datetime.utcnow()
-            expired_tokens = [
-                qt for qt, sess in bridge_sessions.items()
-                if now > sess["expires_at"]
-            ]
-            for qt in expired_tokens:
-                session = bridge_sessions.pop(qt, None)
-                if session and session.get("connected"):
-                    session_id = session["session_id"]
-                    if session_id in active_websockets:
-                        try:
-                            await active_websockets[session_id].close(code=4010, reason="Session expired")
-                        except Exception:
-                            pass
-                        del active_websockets[session_id]
-                logger.info(f"Expired session cleaned: qr_token={qt}")
+            
+            # Scan for expired sessions
+            async for key in r.scan_iter(match=f"{BRIDGE_SESSION_PREFIX}*"):
+                data = await r.get(key)
+                if data:
+                    sess = json.loads(data)
+                    expires_at = datetime.fromisoformat(sess["expires_at"]) if isinstance(sess["expires_at"], str) else sess["expires_at"]
+                    if now > expires_at:
+                        await r.delete(key)
+                        session_id = sess.get("session_id")
+                        if session_id:
+                            await _delete_ws_session(session_id)
+                        logger.info(f"Expired session cleaned: {key}")
         except Exception as e:
             logger.error(f"Cleanup task error: {e}")
 
 
-def start_cleanup_task():
+async def start_cleanup_task():
     """Start the background cleanup task."""
     global _cleanup_task
     if _cleanup_task is None or _cleanup_task.done():
         _cleanup_task = asyncio.create_task(_cleanup_expired_sessions_periodic())
+    await asyncio.sleep(0)  # Ensure task starts
 
 
 def stop_cleanup_task():
@@ -379,22 +456,38 @@ def stop_cleanup_task():
         _cleanup_task = None
 
 
-def get_bridge_stats() -> dict:
+async def get_bridge_stats() -> dict:
     """Get current bridge session statistics."""
+    r = await _get_redis()
     now = datetime.utcnow()
-    return {
-        "total_sessions": len(bridge_sessions),
-        "active_connections": len(active_websockets),
-        "expired_sessions": sum(1 for s in bridge_sessions.values() if now > s["expires_at"]),
-        "sessions": [
-            {
-                "qr_token": qt,
+    sessions = []
+    total = 0
+    expired = 0
+    active = 0
+    
+    async for key in r.scan_iter(match=f"{BRIDGE_SESSION_PREFIX}*"):
+        data = await r.get(key)
+        if data:
+            total += 1
+            s = json.loads(data)
+            expires_at = datetime.fromisoformat(s["expires_at"]) if isinstance(s["expires_at"], str) else s["expires_at"]
+            is_expired = now > expires_at
+            if is_expired:
+                expired += 1
+            if s.get("connected"):
+                active += 1
+            sessions.append({
+                "qr_token": key.replace(BRIDGE_SESSION_PREFIX, ""),
                 "session_id": s["session_id"],
-                "connected": s["connected"],
-                "scanned_count": s["scanned_count"],
-                "expires_at": s["expires_at"].isoformat(),
-                "is_expired": now > s["expires_at"],
-            }
-            for qt, s in bridge_sessions.items()
-        ]
+                "connected": s.get("connected", False),
+                "scanned_count": s.get("scanned_count", 0),
+                "expires_at": s["expires_at"],
+                "is_expired": is_expired,
+            })
+    
+    return {
+        "total_sessions": total,
+        "active_connections": active,
+        "expired_sessions": expired,
+        "sessions": sessions
     }

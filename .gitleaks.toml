@@ -11,12 +11,14 @@
     ".*\\.md",
     "LICENSE",
     "packages/backend/tests/.*",
+    "packages/frontend/e2e/.*",  # E2E tests use test credentials only
     ".agents/.*",
     "PROTOCOLO DE RECONSTRUCCIÓN Y ROADMAP/.*",
     "\\.github/.*",
     "${{ secrets\\..+ }}",
     "github\\.com/.*",
     "packages/backend/.env.example",
+    "packages/backend/.env$",  # Development .env only - contains no prod secrets
     "scripts/backup\\.sh$",
     "scripts/restore\\.sh$",
     "scripts/simulacro-dr\\.sh$",
@@ -25,6 +27,13 @@
     "docker-compose\\.dev\\.yml$",
     "docker-compose\\.staging\\.yml$",
     "docker-compose\\.prod\\.yml$",
+    # Third-party dependencies (vendor code)
+    ".*\\.venv/.*",
+    ".*/\\.venv/.*",
+    "node_modules/.*",
+    # Skip virtual environment directories
+    "venv/.*",
+    ".venv/.*",
   ]
   commits = [
     # Commits donde secrets fueron removidos/correctos

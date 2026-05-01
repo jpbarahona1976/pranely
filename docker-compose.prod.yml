@@ -144,7 +144,6 @@ services:
       PYTHONPATH: /app
       TZ: "America/Mexico_City"
     volumes:
-      - ./packages/backend:/app
       - backend_logs:/app/logs
     logging:
       driver: "json-file"
@@ -190,7 +189,6 @@ services:
       PYTHONPATH: /app
       TZ: "America/Mexico_City"
     volumes:
-      - ./packages/backend:/app
       - backend_logs:/app/logs
     logging:
       driver: "json-file"

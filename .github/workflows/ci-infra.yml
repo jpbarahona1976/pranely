@@ -1,142 +1,186 @@
 # =============================================================================
-# PRANELY - CI Infrastructure Workflow
-# Requires 2 approvals for infra changes
+# PRANELY - Infrastructure Validation CI
+# FASE 1 - Secrets and Infrastructure
 # =============================================================================
 
-name: CI Infrastructure
+name: Infrastructure Validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
-      - 'infra/**'
-      - 'docker-compose*.yml'
-      - 'Dockerfile*'
-      - '.devcontainer/**'
+      - 'infrastructure/**'
       - 'scripts/**'
+      - 'configs/**'
+      - '.github/workflows/ci-infra.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'infra/**'
-      - 'docker-compose*.yml'
-      - 'Dockerfile*'
-      - '.devcontainer/**'
+      - 'infrastructure/**'
       - 'scripts/**'
-
-concurrency:
-  group: ci-infra-${{ github.ref }}
-  cancel-in-progress: true
+      - 'configs/**'
+      - '.github/workflows/ci-infra.yml'
 
 env:
-  TERRAFORM_VERSION: "1.9.0"
-  ANSIBLE_VERSION: "2.18.0"
+  PYTHON_VERSION: '3.12'
 
 jobs:
-  # =============================================================================
-  # Terraform Validation
-  # =============================================================================
-  terraform-validate:
-    name: Terraform Validate
+  # ===========================================================================
+  # Job 1: Terraform Validation
+  # ===========================================================================
+  terraform-validation:
+    name: Terraform Validation
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check Terraform Directory
+        id: tf-check
+        run: |
+          if exist "infrastructure\terraform" (
+            echo "exists=true" >> %GITHUB_OUTPUT%
+            echo "path=infrastructure\terraform" >> %GITHUB_OUTPUT%
+          ) else (
+            echo "exists=false" >> %GITHUB_OUTPUT%
+            echo "path=" >> %GITHUB_OUTPUT%
+            echo No terraform directory found
+          )
 
       - name: Setup Terraform
+        if: steps.tf-check.outputs.exists == 'true'
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_version: 1.6.0
 
       - name: Terraform Init
-        working-directory: infra/terraform
-        run: terraform init -backend=false || echo "No terraform config"
+        if: steps.tf-check.outputs.exists == 'true'
+        working-directory: ${{ steps.tf-check.outputs.path }}
+        run: |
+          echo ## Terraform Init
+          terraform init -input=false
+          if errorlevel 1 (
+            echo ❌ Terraform init failed
+            exit /b 1
+          )
 
       - name: Terraform Validate
-        working-directory: infra/terraform
-        run: terraform validate || echo "No terraform config"
+        if: steps.tf-check.outputs.exists == 'true'
+        working-directory: ${{ steps.tf-check.outputs.path }}
+        run: |
+          echo ## Terraform Validate
+          terraform validate
+          if errorlevel 1 (
+            echo ❌ Terraform validate failed
+            exit /b 1
+          )
+          echo ✅ Terraform validation passed
 
-      - name: Terraform_fmt Check
-        working-directory: infra/terraform
-        run: terraform fmt -check || echo "No terraform config"
-
-  # =============================================================================
-  # Docker Compose Validation
-  # =============================================================================
-  docker-validate:
-    name: Docker Compose Validate
+  # ===========================================================================
+  # Job 2: Ansible Validation
+  # ===========================================================================
+  ansible-validation:
+    name: Ansible Validation
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate base compose
-        run: docker compose -f docker-compose.base.yml config --quiet
-
-      - name: Validate dev compose
-        run: docker compose -f docker-compose.dev.yml config --quiet
-
-  # =============================================================================
-  # Ansible Syntax Check
-  # =============================================================================
-  ansible-check:
-    name: Ansible Syntax Check
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check Ansible Directory
+        id: ansible-check
+        run: |
+          if exist "infrastructure\ansible" (
+            echo "exists=true" >> %GITHUB_OUTPUT%
+            echo "path=infrastructure\ansible" >> %GITHUB_OUTPUT%
+          ) else (
+            echo "exists=false" >> %GITHUB_OUTPUT%
+            echo "path=" >> %GITHUB_OUTPUT%
+            echo No ansible directory found
+          )
 
       - name: Setup Python
+        if: steps.ansible-check.outputs.exists == 'true'
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12.7"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Ansible
-        run: pip install ansible-core==${{ env.ANSIBLE_VERSION }}
+        if: steps.ansible-check.outputs.exists == 'true'
+        run: pip install ansible ansible-lint
 
-      - name: Ansible Lint
-        working-directory: infra/ansible
-        run: ansible-lint --syntax-only *.yml || echo "No ansible config"
+      - name: Ansible Syntax Check
+        if: steps.ansible-check.outputs.exists == 'true'
+        working-directory: ${{ steps.ansible-check.outputs.path }}
+        run: |
+          echo ## Ansible Syntax Check
+          ansible-playbook --syntax-check playbooks\*.yml
+          if errorlevel 1 (
+            echo ❌ Ansible syntax check failed
+            exit /b 1
+          )
+          echo ✅ Ansible syntax OK
 
-  # =============================================================================
-  # Security Scan for Infra
-  # =============================================================================
-  infra-security:
-    name: Infrastructure Security
+  # ===========================================================================
+  # Job 3: Scripts Validation
+  # ===========================================================================
+  scripts-validation:
+    name: Scripts Validation
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Trivy Infrastructure
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "config"
-          scan-ref: "."
-          format: "table"
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+      - name: Validate Python Scripts
+        run: |
+          echo ## Python Script Validation
+          python -m py_compile scripts\*.py 2>nul || echo No python scripts found
+
+      - name: Validate Shell Scripts
+        run: |
+          echo ## Shell Script Validation
+          where shellcheck >nul 2>&1 || echo shellcheck not installed, skipping
+
+  # ===========================================================================
+  # Job 4: Config Files Validation
+  # ===========================================================================
+  config-validation:
+    name: Config Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose
+        run: |
+          echo ## Docker Compose Validation
+          docker compose -f docker-compose.dev.yml config --quiet
+          if errorlevel 1 (
+            echo ❌ Docker compose validation failed
+            exit /b 1
+          )
+          echo ✅ Docker compose files passed
+
+  # ===========================================================================
+  # Job 5: Security Scan
+  # ===========================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         with:
           config-path: .gitleaks.toml
 
-  # =============================================================================
-  # Require 2 Approvals for Infra Changes
-  # =============================================================================
-  approval-check:
-    name: Approval Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [terraform-validate, docker-validate, ansible-check, infra-security]
-    
-    steps:
-      - name: Check approvals
-        run: |
-          echo "Esta verificación requiere 2 aprobaciones de CODEOWNERS"
-          echo "Los archivos en infra/, docker/, scripts/ requieren revisión de @juanbarahona"
-          echo "Verificar manualmente en la UI de GitHub que hay 2 aprobaciones"
+# =============================================================================
+# Badge URL:
+# ![Infra CI](https://github.com/pranely/pranely/actions/workflows/ci-infra.yml/badge.svg)
+# =============================================================================

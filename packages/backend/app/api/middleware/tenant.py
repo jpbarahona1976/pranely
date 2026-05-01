@@ -96,10 +96,16 @@ class TenantMiddleware(BaseHTTPMiddleware):
     """
     Middleware that extracts org_id and role from JWT token.
     
-    Injects tenant context into request.state for downstream use.
-    Rejects cross-tenant access attempts with 403.
-    """
+    Injects tenant context into request.state for downstream use:
+    - request.state.tenant_ctx: Full TenantContext object
+    - request.state.org_id: Direct org_id for easy access (int or None)
+    - request.state.user_id: Direct user_id for easy access (int or None)
+    - request.state.role: User role string
     
+    Also propagates org_id via x-org-id header in request.scope
+    for MetricsMiddleware (ASGI middleware) consumption.
+    """
+
     # Paths that don't require tenant context
     PUBLIC_PATHS = [
         "/",
@@ -121,8 +127,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if self._is_public_path(request.url.path):
             return await call_next(request)
         
-        # Initialize tenant context as None
+        # Initialize tenant context as None (default state)
         request.state.tenant_ctx = None
+        request.state.org_id = None
+        request.state.user_id = None
+        request.state.role = None
         
         # Try to extract tenant context from JWT
         auth_header = request.headers.get("Authorization")
@@ -130,7 +139,31 @@ class TenantMiddleware(BaseHTTPMiddleware):
             token = auth_header[7:]  # Remove "Bearer " prefix
             tenant_ctx = self._extract_tenant_context(token)
             if tenant_ctx:
+                # Inject full context
                 request.state.tenant_ctx = tenant_ctx
+                # Propagate direct properties for audit/metrics
+                request.state.org_id = tenant_ctx.org_id
+                request.state.user_id = tenant_ctx.user_id
+                request.state.role = tenant_ctx.role
+                
+                # FIX 1: Propagate org_id via x-org-id header for MetricsMiddleware
+                # MetricsMiddleware is ASGI and reads from scope headers
+                # We inject x-org-id so it can be consumed by the metrics layer
+                if tenant_ctx.org_id is not None:
+                    # Ensure headers list exists
+                    if "headers" not in request.scope:
+                        request.scope["headers"] = []
+                    
+                    # Remove any existing x-org-id headers (avoid duplicates)
+                    request.scope["headers"] = [
+                        (k, v) for k, v in request.scope["headers"]
+                        if k != b"x-org-id"
+                    ]
+                    
+                    # Add new x-org-id header with the org_id value
+                    request.scope["headers"].append(
+                        (b"x-org-id", str(tenant_ctx.org_id).encode("utf-8"))
+                    )
         
         return await call_next(request)
     
@@ -198,33 +231,3 @@ def require_org_id(request: Request) -> int:
             },
         )
     return ctx.org_id
-
-
-def check_cross_tenant_access(request: Request, target_org_id: int) -> None:
-    """
-    Check if request has access to target organization.
-    
-    Raises 403 if tenant context doesn't match target_org_id.
-    """
-    ctx = get_tenant_context(request)
-    if ctx is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "type": "https://api.pranely.com/errors/tenant",
-                "title": "Access denied",
-                "status": 403,
-                "detail": "Authentication required",
-            },
-        )
-    
-    if ctx.org_id != target_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "type": "https://api.pranely.com/errors/tenant",
-                "title": "Cross-tenant access denied",
-                "status": 403,
-                "detail": f"Access to organization {target_org_id} is not permitted",
-            },
-        )

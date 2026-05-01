@@ -1,0 +1,24 @@
+# =============================================================================
+# PRANELY - Gitleaks Configuration
+# Excludes audit evidence and generated files
+# =============================================================================
+
+[allowlist]
+files = [
+  # Audit evidence (historical scans, not code)
+  "^audit-evidence/",
+  # Generated reports
+  "^gitleaks.*\\.json$",
+  "^gitleaks.*\\.log$",
+  # Dependencies (external code)
+  "^packages/backend/.venv/",
+  "^packages/frontend/node_modules/",
+]
+
+[allowlist]
+regexes = [
+  # Placeholder values (not real secrets)
+  "changeme",
+  "staging-secret-key-for-testing-only",
+  "test-secret-key-for-testing-only",
+]

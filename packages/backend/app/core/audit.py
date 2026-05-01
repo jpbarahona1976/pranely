@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
+from contextvars import ContextVar
 
 from app.core.database import AsyncSessionLocal
 from app.models import Base
@@ -227,12 +228,18 @@ class PIIRedactor:
 
 
 class CorrelationContext:
-    """Thread-local correlation ID management for request tracing."""
+    """
+    Correlation ID management using ContextVar for proper async/thread safety.
     
-    _correlation_id: str = ""
-    _org_id: Optional[int] = None
-    _user_id: Optional[int] = None
-    _request_id: Optional[str] = None
+    Uses Python contextvars to ensure correlation context is isolated per request,
+    preventing cross-contamination in async contexts and concurrent requests.
+    """
+    
+    # ContextVar provides isolation per async context/thread
+    _correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+    _org_id_var: ContextVar[Optional[int]] = ContextVar("org_id", default=None)
+    _user_id_var: ContextVar[Optional[int]] = ContextVar("user_id", default=None)
+    _request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
     
     @classmethod
     def set(
@@ -242,14 +249,14 @@ class CorrelationContext:
         user_id: Optional[int] = None,
         request_id: Optional[str] = None
     ) -> str:
-        """Set correlation context values."""
+        """Set correlation context values in the current async context."""
         if correlation_id is None:
             correlation_id = str(uuid.uuid4())
         
-        cls._correlation_id = correlation_id
-        cls._org_id = org_id
-        cls._user_id = user_id
-        cls._request_id = request_id
+        cls._correlation_id_var.set(correlation_id)
+        cls._org_id_var.set(org_id)
+        cls._user_id_var.set(user_id)
+        cls._request_id_var.set(request_id)
         
         return correlation_id
     
@@ -260,30 +267,30 @@ class CorrelationContext:
         Returns empty string if no correlation ID was set,
         unless explicitly set via set() which generates UUID.
         """
-        return cls._correlation_id
+        return cls._correlation_id_var.get()
     
     @classmethod
     def get_org_id(cls) -> Optional[int]:
         """Get current organization ID."""
-        return cls._org_id
+        return cls._org_id_var.get()
     
     @classmethod
     def get_user_id(cls) -> Optional[int]:
         """Get current user ID."""
-        return cls._user_id
+        return cls._user_id_var.get()
     
     @classmethod
     def get_request_id(cls) -> Optional[str]:
         """Get current request ID."""
-        return cls._request_id
+        return cls._request_id_var.get()
     
     @classmethod
     def clear(cls) -> None:
-        """Clear correlation context."""
-        cls._correlation_id = ""
-        cls._org_id = None
-        cls._user_id = None
-        cls._request_id = None
+        """Clear correlation context for the current async context."""
+        cls._correlation_id_var.set("")
+        cls._org_id_var.set(None)
+        cls._user_id_var.set(None)
+        cls._request_id_var.set(None)
 
 
 # =============================================================================

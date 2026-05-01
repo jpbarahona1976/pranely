@@ -1,11 +1,17 @@
 // 8A MOBILE BRIDGE - E2E Tests
 import { test, expect } from '@playwright/test';
 
+// Test credentials MUST be provided via environment variables
+// CI/CD should set: E2E_TEST_EMAIL, E2E_TEST_PASSWORD, E2E_TEST_TOKEN
+const TEST_EMAIL = process.env.E2E_TEST_EMAIL;
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD;
+const TEST_TOKEN = process.env.E2E_TEST_TOKEN;
+
 describe('Mobile Bridge E2E', () => {
   const testUser = {
-    email: 'test@pranely.com',
-    password: 'Test123!',
-    token: 'test-jwt-token-for-bridge',
+    email: TEST_EMAIL,
+    password: TEST_PASSWORD,
+    token: TEST_TOKEN,
   };
 
   test.describe('Bridge Session Flow', () => {
@@ -80,9 +86,9 @@ describe('Mobile Bridge E2E', () => {
       // Go to manual entry
       await page.locator('button:has-text("Entrada Manual")').click();
       
-      // Type partial token
+      // Type partial token (needs 16 chars for validation)
       const tokenInput = page.locator('input[placeholder*="A1B2C3"]');
-      await tokenInput.fill('ABCD1234');
+      await tokenInput.fill('XXXX1234');
       
       // Validate button should be disabled (needs 16 chars)
       await expect(page.locator('button:has-text("Validar")')).toBeDisabled();
@@ -92,9 +98,9 @@ describe('Mobile Bridge E2E', () => {
       // Go to manual entry
       await page.locator('button:has-text("Entrada Manual")').click();
       
-      // Type complete token
+      // Type complete token (16 chars minimum)
       const tokenInput = page.locator('input[placeholder*="A1B2C3"]');
-      await tokenInput.fill('ABCD1234EFGH5678');
+      await tokenInput.fill('XXXX1234YYYY5678');
       
       // Validate button should be enabled
       await expect(page.locator('button:has-text("Validar")')).toBeEnabled();
@@ -212,6 +218,88 @@ describe('Mobile Bridge E2E', () => {
       // Check for rounded-2xl class
       const roundedCard = page.locator('.rounded-2xl').first();
       await expect(roundedCard).toBeVisible();
+    });
+  });
+
+  test.describe('Bridge Offline Queue', () => {
+    test('should store items in localStorage when offline', async ({ page }) => {
+      await page.goto('/bridge');
+      
+      // Simulate adding to offline queue via localStorage
+      const testData = 'TEST_DATA_placeholder';
+      await page.evaluate((token) => {
+        const queue = [{ qr_data: token, timestamp: Date.now() }];
+        localStorage.setItem('pranely_bridge_offline_queue', JSON.stringify(queue));
+      }, testData);
+      
+      // Verify queue was stored
+      const queue = await page.evaluate(() => {
+        return localStorage.getItem('pranely_bridge_offline_queue');
+      });
+      
+      expect(queue).toBeTruthy();
+      expect(queue).toContain(testData);
+    });
+
+    test('should display offline queue indicator when queue has items', async ({ page }) => {
+      await page.goto('/bridge');
+      
+      // Pre-populate queue
+      await page.evaluate(() => {
+        const queue = [
+          { qr_data: 'TEST_ITEM_001', timestamp: Date.now() },
+          { qr_data: 'TEST_ITEM_002', timestamp: Date.now() }
+        ];
+        localStorage.setItem('pranely_bridge_offline_queue', JSON.stringify(queue));
+      });
+      
+      // Reload page to trigger indicator
+      await page.reload();
+      
+      // Should show offline queue indicator
+      const indicator = page.locator('text=escaneos en cola offline');
+      await expect(indicator).toBeVisible();
+    });
+
+    test('should clear offline queue on button click', async ({ page }) => {
+      await page.goto('/bridge');
+      
+      // Pre-populate queue with multiple items
+      await page.evaluate(() => {
+        const queue = [
+          { qr_data: 'CLEAR_ITEM_TEST', timestamp: Date.now() }
+        ];
+        localStorage.setItem('pranely_bridge_offline_queue', JSON.stringify(queue));
+      });
+      
+      await page.reload();
+      
+      // Click clear button
+      const clearButton = page.locator('button:has-text("Limpiar")');
+      if (await clearButton.isVisible()) {
+        await clearButton.click();
+        
+        // Verify queue is empty
+        const queue = await page.evaluate(() => {
+          return localStorage.getItem('pranely_bridge_offline_queue');
+        });
+        expect(queue).toBeNull();
+      }
+    });
+
+    test('should not show queue indicator when queue is empty', async ({ page }) => {
+      await page.goto('/bridge');
+      
+      // Ensure queue is empty
+      await page.evaluate(() => {
+        localStorage.removeItem('pranely_bridge_offline_queue');
+      });
+      
+      await page.reload();
+      
+      // Should NOT show offline queue indicator
+      const indicator = page.locator('text=escaneos en cola offline');
+      await expect(indicator).not.toBeVisible();
     });
   });
 });

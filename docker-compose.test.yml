@@ -1,0 +1,71 @@
+# =============================================================================
+# PRANELY - Docker Compose Test (Fase 9A.1)
+# Usado para CI: levanta servicios y corre tests, luego destruye todo
+# =============================================================================
+
+services:
+  # PostgreSQL 16 - Base de datos de tests
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: pranely-postgres-test
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test_db
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d test_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    networks:
+      - pranely-test-network
+
+  # Redis 7 - Para rate limiting tests
+  redis-test:
+    image: redis:7-alpine
+    container_name: pranely-redis-test
+    command: redis-server --appendonly no --maxmemory 64mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pranely-test-network
+
+  # Backend - Para pytest en CI
+  backend-test:
+    build:
+      context: packages/backend
+      dockerfile: Dockerfile.test
+    image: pranely-backend:test
+    container_name: pranely-backend-test
+    environment:
+      DATABASE_URL: postgresql+asyncpg://test:test@postgres-test:5432/test_db
+      REDIS_URL: redis://redis-test:6379
+      ENV: test
+      SECRET_KEY: test-secret-key-for-ci-only-32chars
+      STRIPE_SECRET_KEY: sk_test_mock
+      STRIPE_WEBHOOK_SECRET: whsec_mock
+      PYTHONPATH: /app
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - pranely-test-network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-test-network:
+    name: pranely-test-network
+    driver: bridge

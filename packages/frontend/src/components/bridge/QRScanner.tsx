@@ -16,7 +16,6 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
@@ -25,10 +24,6 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
-    }
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
     }
     setIsScanning(false);
   }, []);
@@ -73,7 +68,7 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
     };
   }, [disabled, startCamera, stopCamera]);
 
-  // QR scanning loop
+  // QR scanning loop with jsqr
   useEffect(() => {
     if (!isScanning || !videoRef.current || !canvasRef.current) return;
 
@@ -83,8 +78,13 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
     
     if (!ctx) return;
 
+    let scanning = true;
+    
     const scan = async () => {
-      if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+      if (!scanning || !video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+        requestAnimationFrame(scan);
+        return;
+      }
       
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -93,25 +93,29 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       
       try {
-        // Dynamic import of jsqr for code splitting
-        const jsQR = (await import("jsqr")).default;
+        // Dynamic import jsqr
+        const jsQR = await import("jsqr").then(m => m.default);
         const code = jsQR(imageData.data, imageData.width, imageData.height);
         
         if (code) {
           // Found a QR code!
           onScan(code.data);
+          // Brief pause after successful scan
+          await new Promise(r => setTimeout(r, 1000));
         }
       } catch (e) {
         // jsqr decode failed, continue scanning
       }
+      
+      if (scanning) {
+        requestAnimationFrame(scan);
+      }
     };
 
-    scanIntervalRef.current = setInterval(scan, 250);
+    requestAnimationFrame(scan);
 
     return () => {
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-      }
+      scanning = false;
     };
   }, [isScanning, onScan]);
 
@@ -167,7 +171,7 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
             
             {/* Scanning line animation */}
             <div className="absolute left-2 right-2 h-0.5 bg-emerald-400/80 animate-pulse"
-              style={{ top: "50%", animation: "scanLine 2s ease-in-out infinite" }}
+              style={{ top: "50%" }}
             />
           </div>
         </div>
@@ -199,13 +203,6 @@ export function QRScanner({ onScan, onError, onClose, disabled }: QRScannerProps
           <p className="text-sm text-rose-300 text-center">{error}</p>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes scanLine {
-          0%, 100% { transform: translateY(-20px); opacity: 0.5; }
-          50% { transform: translateY(20px); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

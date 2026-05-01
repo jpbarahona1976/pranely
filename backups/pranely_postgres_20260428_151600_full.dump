@@ -1,0 +1,2105 @@
+--
+-- PostgreSQL database cluster dump
+--
+
+\restrict 1bRJlv8XdPkw8U5vze8i0ea1mzNqKHRp6wrSEhzy7VkKfpECUUORcMhcgShBhvt
+
+SET default_transaction_read_only = off;
+
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+
+--
+-- Roles
+--
+
+CREATE ROLE pranely;
+ALTER ROLE pranely WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS PASSWORD 'SCRAM-SHA-256$4096:vi8GqzkAOzJ0EWZcqGTycw==$Uxy26rivOOQB4PgYOo6G+Me+7N05A7fntcggo0Bc7VY=:vEAaO2ngYPrNUZGdDpDpTq1WiOnVHiqY0Or2aFcH4J0=';
+
+--
+-- User Configurations
+--
+
+
+
+
+
+
+
+
+\unrestrict 1bRJlv8XdPkw8U5vze8i0ea1mzNqKHRp6wrSEhzy7VkKfpECUUORcMhcgShBhvt
+
+--
+-- Databases
+--
+
+--
+-- Database "template1" dump
+--
+
+\connect template1
+
+--
+-- PostgreSQL database dump
+--
+
+\restrict G9waevCdcNr0So0cEJdWMTnKfPr6iocZg3aqxJz6gMRGrKF12oS4N9V2fw1Ok31
+
+-- Dumped from database version 16.13
+-- Dumped by pg_dump version 16.13
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict G9waevCdcNr0So0cEJdWMTnKfPr6iocZg3aqxJz6gMRGrKF12oS4N9V2fw1Ok31
+
+--
+-- Database "postgres" dump
+--
+
+\connect postgres
+
+--
+-- PostgreSQL database dump
+--
+
+\restrict 7faqUQAtGBPXpepCSww3HXeW22uV0Nhrga6CNGcfCdEO7Qn3mDxohIz9uDMv07i
+
+-- Dumped from database version 16.13
+-- Dumped by pg_dump version 16.13
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict 7faqUQAtGBPXpepCSww3HXeW22uV0Nhrga6CNGcfCdEO7Qn3mDxohIz9uDMv07i
+
+--
+-- Database "pranely_dev" dump
+--
+
+--
+-- PostgreSQL database dump
+--
+
+\restrict P8uq2JdhfFNG5wa4bZUXi4Hskt1sSbcjxkvySkamwluNTV5XnQin9DVkJ2JUv5N
+
+-- Dumped from database version 16.13
+-- Dumped by pg_dump version 16.13
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: pranely_dev; Type: DATABASE; Schema: -; Owner: pranely
+--
+
+CREATE DATABASE pranely_dev WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'en_US.utf8';
+
+
+ALTER DATABASE pranely_dev OWNER TO pranely;
+
+\unrestrict P8uq2JdhfFNG5wa4bZUXi4Hskt1sSbcjxkvySkamwluNTV5XnQin9DVkJ2JUv5N
+\connect pranely_dev
+\restrict P8uq2JdhfFNG5wa4bZUXi4Hskt1sSbcjxkvySkamwluNTV5XnQin9DVkJ2JUv5N
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: alertseverity; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.alertseverity AS ENUM (
+    'LOW',
+    'MEDIUM',
+    'HIGH',
+    'CRITICAL'
+);
+
+
+ALTER TYPE public.alertseverity OWNER TO pranely;
+
+--
+-- Name: alertstatus; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.alertstatus AS ENUM (
+    'OPEN',
+    'ACKNOWLEDGED',
+    'RESOLVED',
+    'DISMISSED'
+);
+
+
+ALTER TYPE public.alertstatus OWNER TO pranely;
+
+--
+-- Name: auditaction; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.auditaction AS ENUM (
+    'CREATE',
+    'READ',
+    'UPDATE',
+    'DELETE',
+    'LOGIN',
+    'LOGOUT',
+    'EXPORT',
+    'IMPORT',
+    'APPROVE',
+    'REJECT',
+    'ARCHIVE',
+    'RESTORE',
+    'CONSENT',
+    'CONSENT_WITHDRAW',
+    'PERMISSION_CHANGE',
+    'CONFIG_CHANGE'
+);
+
+
+ALTER TYPE public.auditaction OWNER TO pranely;
+
+--
+-- Name: auditlogresult; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.auditlogresult AS ENUM (
+    'SUCCESS',
+    'FAILURE',
+    'PARTIAL'
+);
+
+
+ALTER TYPE public.auditlogresult OWNER TO pranely;
+
+--
+-- Name: auditseverity; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.auditseverity AS ENUM (
+    'DEBUG',
+    'INFO',
+    'WARN',
+    'ERROR',
+    'AUDIT'
+);
+
+
+ALTER TYPE public.auditseverity OWNER TO pranely;
+
+--
+-- Name: billingplancode; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.billingplancode AS ENUM (
+    'FREE',
+    'PRO',
+    'ENTERPRISE'
+);
+
+
+ALTER TYPE public.billingplancode OWNER TO pranely;
+
+--
+-- Name: documentstatus; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.documentstatus AS ENUM (
+    'UPLOADED',
+    'PROCESSING',
+    'PROCESSED',
+    'FAILED',
+    'PENDING_REVIEW',
+    'APPROVED',
+    'REJECTED',
+    'REPROCESSING'
+);
+
+
+ALTER TYPE public.documentstatus OWNER TO pranely;
+
+--
+-- Name: entitystatus; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.entitystatus AS ENUM (
+    'ACTIVE',
+    'INACTIVE',
+    'PENDING'
+);
+
+
+ALTER TYPE public.entitystatus OWNER TO pranely;
+
+--
+-- Name: movementstatus; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.movementstatus AS ENUM (
+    'PENDING',
+    'IN_REVIEW',
+    'VALIDATED',
+    'REJECTED',
+    'EXCEPTION'
+);
+
+
+ALTER TYPE public.movementstatus OWNER TO pranely;
+
+--
+-- Name: reviewactiontype; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.reviewactiontype AS ENUM (
+    'APPROVE',
+    'REJECT',
+    'REPROCESS',
+    'EDIT'
+);
+
+
+ALTER TYPE public.reviewactiontype OWNER TO pranely;
+
+--
+-- Name: subscriptionstatus; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.subscriptionstatus AS ENUM (
+    'ACTIVE',
+    'PAUSED',
+    'CANCELLED',
+    'PAST_DUE'
+);
+
+
+ALTER TYPE public.subscriptionstatus OWNER TO pranely;
+
+--
+-- Name: userrole; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.userrole AS ENUM (
+    'OWNER',
+    'ADMIN',
+    'MEMBER',
+    'VIEWER'
+);
+
+
+ALTER TYPE public.userrole OWNER TO pranely;
+
+--
+-- Name: wastestatus; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.wastestatus AS ENUM (
+    'PENDING',
+    'ACTIVE',
+    'DISPOSED',
+    'ARCHIVED'
+);
+
+
+ALTER TYPE public.wastestatus OWNER TO pranely;
+
+--
+-- Name: wastetype; Type: TYPE; Schema: public; Owner: pranely
+--
+
+CREATE TYPE public.wastetype AS ENUM (
+    'PELIGROSO',
+    'ESPECIAL',
+    'INERTE',
+    'ORGANICO',
+    'RECICLABLE'
+);
+
+
+ALTER TYPE public.wastetype OWNER TO pranely;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.audit_logs (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    user_id integer,
+    action character varying(50) NOT NULL,
+    resource_type character varying(50) NOT NULL,
+    resource_id character varying(100),
+    result public.auditlogresult NOT NULL,
+    payload_json json,
+    ip_address character varying(45),
+    user_agent text,
+    "timestamp" timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.audit_logs OWNER TO pranely;
+
+--
+-- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.audit_logs_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.audit_logs_id_seq OWNER TO pranely;
+
+--
+-- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.audit_logs_id_seq OWNED BY public.audit_logs.id;
+
+
+--
+-- Name: audit_trails; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.audit_trails (
+    id integer NOT NULL,
+    correlation_id character varying(36) NOT NULL,
+    user_id integer,
+    organization_id integer,
+    action public.auditaction NOT NULL,
+    resource_type character varying(50) NOT NULL,
+    resource_id character varying(100),
+    severity public.auditseverity NOT NULL,
+    ip_address character varying(45),
+    user_agent text,
+    request_path character varying(500),
+    request_method character varying(10),
+    request_data json,
+    response_status integer,
+    audit_metadata json,
+    "timestamp" timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.audit_trails OWNER TO pranely;
+
+--
+-- Name: audit_trails_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.audit_trails_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.audit_trails_id_seq OWNER TO pranely;
+
+--
+-- Name: audit_trails_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.audit_trails_id_seq OWNED BY public.audit_trails.id;
+
+
+--
+-- Name: billing_plans; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.billing_plans (
+    id integer NOT NULL,
+    code public.billingplancode NOT NULL,
+    name character varying(100) NOT NULL,
+    description character varying(500),
+    price_usd_cents integer NOT NULL,
+    doc_limit integer NOT NULL,
+    doc_limit_period character varying(20) NOT NULL,
+    features_json json,
+    is_active boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.billing_plans OWNER TO pranely;
+
+--
+-- Name: billing_plans_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.billing_plans_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.billing_plans_id_seq OWNER TO pranely;
+
+--
+-- Name: billing_plans_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.billing_plans_id_seq OWNED BY public.billing_plans.id;
+
+
+--
+-- Name: documents; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.documents (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    waste_movement_id integer,
+    file_path character varying(500) NOT NULL,
+    storage_key character varying(255) NOT NULL,
+    orig_filename character varying(255) NOT NULL,
+    file_type character varying(50) NOT NULL,
+    file_size_bytes bigint NOT NULL,
+    status public.documentstatus NOT NULL,
+    ia_extraction_json json,
+    confidence_score double precision,
+    extracted_manifest_number character varying(100),
+    extracted_date timestamp with time zone,
+    extracted_quantity double precision,
+    extracted_unit character varying(20),
+    extracted_waste_type character varying(50),
+    processing_error character varying(1000),
+    processing_attempts integer NOT NULL,
+    last_processed_at timestamp with time zone,
+    review_notes character varying(1000),
+    reviewed_by integer,
+    reviewed_at timestamp with time zone,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.documents OWNER TO pranely;
+
+--
+-- Name: documents_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.documents_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.documents_id_seq OWNER TO pranely;
+
+--
+-- Name: documents_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.documents_id_seq OWNED BY public.documents.id;
+
+
+--
+-- Name: employer_transporter_links; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.employer_transporter_links (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    employer_id integer NOT NULL,
+    transporter_id integer NOT NULL,
+    is_authorized boolean NOT NULL,
+    authorization_date timestamp with time zone,
+    notes character varying(500),
+    created_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.employer_transporter_links OWNER TO pranely;
+
+--
+-- Name: employer_transporter_links_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.employer_transporter_links_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.employer_transporter_links_id_seq OWNER TO pranely;
+
+--
+-- Name: employer_transporter_links_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.employer_transporter_links_id_seq OWNED BY public.employer_transporter_links.id;
+
+
+--
+-- Name: employers; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.employers (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    rfc character varying(13) NOT NULL,
+    address character varying(500) NOT NULL,
+    contact_phone character varying(30),
+    email character varying(255),
+    website character varying(255),
+    industry character varying(100),
+    status public.entitystatus NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone,
+    archived_at timestamp with time zone,
+    extra_data json
+);
+
+
+ALTER TABLE public.employers OWNER TO pranely;
+
+--
+-- Name: employers_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.employers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.employers_id_seq OWNER TO pranely;
+
+--
+-- Name: employers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.employers_id_seq OWNED BY public.employers.id;
+
+
+--
+-- Name: legal_alerts; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.legal_alerts (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    norma character varying(50) NOT NULL,
+    title character varying(255) NOT NULL,
+    description character varying(2000),
+    severity public.alertseverity NOT NULL,
+    status public.alertstatus NOT NULL,
+    related_resource_type character varying(50),
+    related_resource_id character varying(100),
+    acknowledged_at timestamp with time zone,
+    resolved_at timestamp with time zone,
+    resolution_notes character varying(1000),
+    metadata_json json,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.legal_alerts OWNER TO pranely;
+
+--
+-- Name: legal_alerts_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.legal_alerts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.legal_alerts_id_seq OWNER TO pranely;
+
+--
+-- Name: legal_alerts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.legal_alerts_id_seq OWNED BY public.legal_alerts.id;
+
+
+--
+-- Name: memberships; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.memberships (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    organization_id integer NOT NULL,
+    role public.userrole NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.memberships OWNER TO pranely;
+
+--
+-- Name: memberships_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.memberships_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.memberships_id_seq OWNER TO pranely;
+
+--
+-- Name: memberships_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.memberships_id_seq OWNED BY public.memberships.id;
+
+
+--
+-- Name: organizations; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.organizations (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    legal_name character varying(255),
+    industry character varying(100),
+    segment character varying(100),
+    stripe_customer_id character varying(255),
+    is_active boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.organizations OWNER TO pranely;
+
+--
+-- Name: organizations_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.organizations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.organizations_id_seq OWNER TO pranely;
+
+--
+-- Name: organizations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.organizations_id_seq OWNED BY public.organizations.id;
+
+
+--
+-- Name: residues; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.residues (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    employer_id integer NOT NULL,
+    transporter_id integer,
+    name character varying(255) NOT NULL,
+    waste_type public.wastetype NOT NULL,
+    un_code character varying(20),
+    hs_code character varying(20),
+    description character varying(1000),
+    weight_kg double precision,
+    volume_m3 double precision,
+    status public.wastestatus NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone,
+    extra_data json
+);
+
+
+ALTER TABLE public.residues OWNER TO pranely;
+
+--
+-- Name: residues_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.residues_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.residues_id_seq OWNER TO pranely;
+
+--
+-- Name: residues_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.residues_id_seq OWNED BY public.residues.id;
+
+
+--
+-- Name: review_actions; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.review_actions (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    document_id integer NOT NULL,
+    user_id integer NOT NULL,
+    action public.reviewactiontype NOT NULL,
+    notes character varying(1000),
+    previous_status character varying(50),
+    new_status character varying(50),
+    created_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.review_actions OWNER TO pranely;
+
+--
+-- Name: review_actions_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.review_actions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.review_actions_id_seq OWNER TO pranely;
+
+--
+-- Name: review_actions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.review_actions_id_seq OWNED BY public.review_actions.id;
+
+
+--
+-- Name: subscriptions; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.subscriptions (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    plan_id integer NOT NULL,
+    stripe_sub_id character varying(255),
+    stripe_customer_id character varying(255),
+    status public.subscriptionstatus NOT NULL,
+    started_at timestamp with time zone NOT NULL,
+    current_period_start timestamp with time zone,
+    current_period_end timestamp with time zone,
+    cancelled_at timestamp with time zone,
+    metadata_json json,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.subscriptions OWNER TO pranely;
+
+--
+-- Name: subscriptions_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.subscriptions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.subscriptions_id_seq OWNER TO pranely;
+
+--
+-- Name: subscriptions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.subscriptions_id_seq OWNED BY public.subscriptions.id;
+
+
+--
+-- Name: transporters; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.transporters (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    rfc character varying(13) NOT NULL,
+    address character varying(500) NOT NULL,
+    contact_phone character varying(30),
+    email character varying(255),
+    license_number character varying(100),
+    vehicle_plate character varying(20),
+    status public.entitystatus NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone,
+    archived_at timestamp with time zone,
+    extra_data json
+);
+
+
+ALTER TABLE public.transporters OWNER TO pranely;
+
+--
+-- Name: transporters_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.transporters_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.transporters_id_seq OWNER TO pranely;
+
+--
+-- Name: transporters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.transporters_id_seq OWNED BY public.transporters.id;
+
+
+--
+-- Name: usage_cycles; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.usage_cycles (
+    id integer NOT NULL,
+    subscription_id integer NOT NULL,
+    month_year character varying(7) NOT NULL,
+    docs_used integer NOT NULL,
+    docs_limit integer NOT NULL,
+    is_locked boolean NOT NULL,
+    overage_docs integer NOT NULL,
+    overage_charged_cents integer NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.usage_cycles OWNER TO pranely;
+
+--
+-- Name: usage_cycles_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.usage_cycles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.usage_cycles_id_seq OWNER TO pranely;
+
+--
+-- Name: usage_cycles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.usage_cycles_id_seq OWNED BY public.usage_cycles.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    email character varying(255) NOT NULL,
+    hashed_password character varying(255) NOT NULL,
+    full_name character varying(255),
+    locale character varying(10) NOT NULL,
+    is_active boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.users OWNER TO pranely;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO pranely;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- Name: waste_movements; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.waste_movements (
+    id integer NOT NULL,
+    organization_id integer NOT NULL,
+    manifest_number character varying(100) NOT NULL,
+    movement_type character varying(50),
+    quantity double precision,
+    unit character varying(20),
+    date timestamp with time zone,
+    confidence_score double precision,
+    status public.movementstatus NOT NULL,
+    is_immutable boolean NOT NULL,
+    archived_at timestamp with time zone,
+    file_path character varying(500),
+    orig_filename character varying(255),
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.waste_movements OWNER TO pranely;
+
+--
+-- Name: waste_movements_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.waste_movements_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.waste_movements_id_seq OWNER TO pranely;
+
+--
+-- Name: waste_movements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.waste_movements_id_seq OWNED BY public.waste_movements.id;
+
+
+--
+-- Name: webhook_events; Type: TABLE; Schema: public; Owner: pranely
+--
+
+CREATE TABLE public.webhook_events (
+    id integer NOT NULL,
+    event_id character varying(255) NOT NULL,
+    event_type character varying(100) NOT NULL,
+    stripe_customer_id character varying(255),
+    payload_json json,
+    processed_at timestamp with time zone NOT NULL,
+    success boolean NOT NULL,
+    error_message character varying(500)
+);
+
+
+ALTER TABLE public.webhook_events OWNER TO pranely;
+
+--
+-- Name: webhook_events_id_seq; Type: SEQUENCE; Schema: public; Owner: pranely
+--
+
+CREATE SEQUENCE public.webhook_events_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.webhook_events_id_seq OWNER TO pranely;
+
+--
+-- Name: webhook_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: pranely
+--
+
+ALTER SEQUENCE public.webhook_events_id_seq OWNED BY public.webhook_events.id;
+
+
+--
+-- Name: audit_logs id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.audit_logs ALTER COLUMN id SET DEFAULT nextval('public.audit_logs_id_seq'::regclass);
+
+
+--
+-- Name: audit_trails id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.audit_trails ALTER COLUMN id SET DEFAULT nextval('public.audit_trails_id_seq'::regclass);
+
+
+--
+-- Name: billing_plans id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.billing_plans ALTER COLUMN id SET DEFAULT nextval('public.billing_plans_id_seq'::regclass);
+
+
+--
+-- Name: documents id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.documents ALTER COLUMN id SET DEFAULT nextval('public.documents_id_seq'::regclass);
+
+
+--
+-- Name: employer_transporter_links id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employer_transporter_links ALTER COLUMN id SET DEFAULT nextval('public.employer_transporter_links_id_seq'::regclass);
+
+
+--
+-- Name: employers id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employers ALTER COLUMN id SET DEFAULT nextval('public.employers_id_seq'::regclass);
+
+
+--
+-- Name: legal_alerts id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.legal_alerts ALTER COLUMN id SET DEFAULT nextval('public.legal_alerts_id_seq'::regclass);
+
+
+--
+-- Name: memberships id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.memberships ALTER COLUMN id SET DEFAULT nextval('public.memberships_id_seq'::regclass);
+
+
+--
+-- Name: organizations id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.organizations ALTER COLUMN id SET DEFAULT nextval('public.organizations_id_seq'::regclass);
+
+
+--
+-- Name: residues id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.residues ALTER COLUMN id SET DEFAULT nextval('public.residues_id_seq'::regclass);
+
+
+--
+-- Name: review_actions id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.review_actions ALTER COLUMN id SET DEFAULT nextval('public.review_actions_id_seq'::regclass);
+
+
+--
+-- Name: subscriptions id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.subscriptions ALTER COLUMN id SET DEFAULT nextval('public.subscriptions_id_seq'::regclass);
+
+
+--
+-- Name: transporters id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.transporters ALTER COLUMN id SET DEFAULT nextval('public.transporters_id_seq'::regclass);
+
+
+--
+-- Name: usage_cycles id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.usage_cycles ALTER COLUMN id SET DEFAULT nextval('public.usage_cycles_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: waste_movements id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.waste_movements ALTER COLUMN id SET DEFAULT nextval('public.waste_movements_id_seq'::regclass);
+
+
+--
+-- Name: webhook_events id; Type: DEFAULT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.webhook_events ALTER COLUMN id SET DEFAULT nextval('public.webhook_events_id_seq'::regclass);
+
+
+--
+-- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.audit_logs (id, organization_id, user_id, action, resource_type, resource_id, result, payload_json, ip_address, user_agent, "timestamp") FROM stdin;
+\.
+
+
+--
+-- Data for Name: audit_trails; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.audit_trails (id, correlation_id, user_id, organization_id, action, resource_type, resource_id, severity, ip_address, user_agent, request_path, request_method, request_data, response_status, audit_metadata, "timestamp") FROM stdin;
+\.
+
+
+--
+-- Data for Name: billing_plans; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.billing_plans (id, code, name, description, price_usd_cents, doc_limit, doc_limit_period, features_json, is_active, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: documents; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.documents (id, organization_id, waste_movement_id, file_path, storage_key, orig_filename, file_type, file_size_bytes, status, ia_extraction_json, confidence_score, extracted_manifest_number, extracted_date, extracted_quantity, extracted_unit, extracted_waste_type, processing_error, processing_attempts, last_processed_at, review_notes, reviewed_by, reviewed_at, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: employer_transporter_links; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.employer_transporter_links (id, organization_id, employer_id, transporter_id, is_authorized, authorization_date, notes, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: employers; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.employers (id, organization_id, name, rfc, address, contact_phone, email, website, industry, status, created_at, updated_at, archived_at, extra_data) FROM stdin;
+\.
+
+
+--
+-- Data for Name: legal_alerts; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.legal_alerts (id, organization_id, norma, title, description, severity, status, related_resource_type, related_resource_id, acknowledged_at, resolved_at, resolution_notes, metadata_json, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: memberships; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.memberships (id, user_id, organization_id, role, created_at) FROM stdin;
+1	1	1	OWNER	2026-04-25 23:18:44.806085+00
+\.
+
+
+--
+-- Data for Name: organizations; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.organizations (id, name, legal_name, industry, segment, stripe_customer_id, is_active, created_at, updated_at) FROM stdin;
+1	Polymax	\N	\N	\N	\N	t	2026-04-25 23:18:44.661531+00	\N
+\.
+
+
+--
+-- Data for Name: residues; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.residues (id, organization_id, employer_id, transporter_id, name, waste_type, un_code, hs_code, description, weight_kg, volume_m3, status, created_at, updated_at, extra_data) FROM stdin;
+\.
+
+
+--
+-- Data for Name: review_actions; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.review_actions (id, organization_id, document_id, user_id, action, notes, previous_status, new_status, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: subscriptions; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.subscriptions (id, organization_id, plan_id, stripe_sub_id, stripe_customer_id, status, started_at, current_period_start, current_period_end, cancelled_at, metadata_json, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: transporters; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.transporters (id, organization_id, name, rfc, address, contact_phone, email, license_number, vehicle_plate, status, created_at, updated_at, archived_at, extra_data) FROM stdin;
+\.
+
+
+--
+-- Data for Name: usage_cycles; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.usage_cycles (id, subscription_id, month_year, docs_used, docs_limit, is_locked, overage_docs, overage_charged_cents, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.users (id, email, hashed_password, full_name, locale, is_active, created_at, updated_at) FROM stdin;
+1	jose@polymax.com	$argon2id$v=19$m=65536,t=3,p=4$vRvb1mbIfYho/u4wzqa6DQ$NT84CI9S57a3aGVwdg8R3IsD1qbWa3ofUaH5Lqov6AY	Jose Bonilla	es	t	2026-04-25 23:18:44.80116+00	\N
+\.
+
+
+--
+-- Data for Name: waste_movements; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.waste_movements (id, organization_id, manifest_number, movement_type, quantity, unit, date, confidence_score, status, is_immutable, archived_at, file_path, orig_filename, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: webhook_events; Type: TABLE DATA; Schema: public; Owner: pranely
+--
+
+COPY public.webhook_events (id, event_id, event_type, stripe_customer_id, payload_json, processed_at, success, error_message) FROM stdin;
+\.
+
+
+--
+-- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 1, false);
+
+
+--
+-- Name: audit_trails_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.audit_trails_id_seq', 1, false);
+
+
+--
+-- Name: billing_plans_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.billing_plans_id_seq', 1, false);
+
+
+--
+-- Name: documents_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.documents_id_seq', 1, false);
+
+
+--
+-- Name: employer_transporter_links_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.employer_transporter_links_id_seq', 1, false);
+
+
+--
+-- Name: employers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.employers_id_seq', 1, false);
+
+
+--
+-- Name: legal_alerts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.legal_alerts_id_seq', 1, false);
+
+
+--
+-- Name: memberships_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.memberships_id_seq', 3, true);
+
+
+--
+-- Name: organizations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.organizations_id_seq', 3, true);
+
+
+--
+-- Name: residues_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.residues_id_seq', 1, false);
+
+
+--
+-- Name: review_actions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.review_actions_id_seq', 1, false);
+
+
+--
+-- Name: subscriptions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.subscriptions_id_seq', 1, false);
+
+
+--
+-- Name: transporters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.transporters_id_seq', 1, false);
+
+
+--
+-- Name: usage_cycles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.usage_cycles_id_seq', 1, false);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+
+
+--
+-- Name: waste_movements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.waste_movements_id_seq', 1, false);
+
+
+--
+-- Name: webhook_events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: pranely
+--
+
+SELECT pg_catalog.setval('public.webhook_events_id_seq', 1, false);
+
+
+--
+-- Name: billing_plans billing_plans_code_key; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.billing_plans
+    ADD CONSTRAINT billing_plans_code_key UNIQUE (code);
+
+
+--
+-- Name: billing_plans billing_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.billing_plans
+    ADD CONSTRAINT billing_plans_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: documents documents_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT documents_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employer_transporter_links employer_transporter_links_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employer_transporter_links
+    ADD CONSTRAINT employer_transporter_links_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employers employers_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employers
+    ADD CONSTRAINT employers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: legal_alerts legal_alerts_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.legal_alerts
+    ADD CONSTRAINT legal_alerts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: memberships memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: organizations organizations_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.organizations
+    ADD CONSTRAINT organizations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: residues residues_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.residues
+    ADD CONSTRAINT residues_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: review_actions review_actions_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.review_actions
+    ADD CONSTRAINT review_actions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: subscriptions subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: subscriptions subscriptions_stripe_sub_id_key; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_stripe_sub_id_key UNIQUE (stripe_sub_id);
+
+
+--
+-- Name: transporters transporters_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.transporters
+    ADD CONSTRAINT transporters_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: audit_logs uq_audit_log_id; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.audit_logs
+    ADD CONSTRAINT uq_audit_log_id PRIMARY KEY (id);
+
+
+--
+-- Name: audit_trails uq_audit_trail_id; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.audit_trails
+    ADD CONSTRAINT uq_audit_trail_id PRIMARY KEY (id);
+
+
+--
+-- Name: employers uq_employer_org_rfc; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employers
+    ADD CONSTRAINT uq_employer_org_rfc UNIQUE (organization_id, rfc);
+
+
+--
+-- Name: employer_transporter_links uq_link_org_employer_transporter; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employer_transporter_links
+    ADD CONSTRAINT uq_link_org_employer_transporter UNIQUE (organization_id, employer_id, transporter_id);
+
+
+--
+-- Name: memberships uq_membership_user_org; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT uq_membership_user_org UNIQUE (user_id, organization_id);
+
+
+--
+-- Name: subscriptions uq_subscription_org; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT uq_subscription_org UNIQUE (organization_id);
+
+
+--
+-- Name: transporters uq_transporter_org_rfc; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.transporters
+    ADD CONSTRAINT uq_transporter_org_rfc UNIQUE (organization_id, rfc);
+
+
+--
+-- Name: usage_cycles uq_usage_cycle_sub_month; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.usage_cycles
+    ADD CONSTRAINT uq_usage_cycle_sub_month UNIQUE (subscription_id, month_year);
+
+
+--
+-- Name: webhook_events uq_webhook_event_id_type; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.webhook_events
+    ADD CONSTRAINT uq_webhook_event_id_type UNIQUE (event_id, event_type);
+
+
+--
+-- Name: usage_cycles usage_cycles_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.usage_cycles
+    ADD CONSTRAINT usage_cycles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: waste_movements waste_movements_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.waste_movements
+    ADD CONSTRAINT waste_movements_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: webhook_events webhook_events_pkey; Type: CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.webhook_events
+    ADD CONSTRAINT webhook_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ix_audit_log_org_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_log_org_timestamp ON public.audit_logs USING btree (organization_id, "timestamp");
+
+
+--
+-- Name: ix_audit_log_resource; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_log_resource ON public.audit_logs USING btree (resource_type, resource_id);
+
+
+--
+-- Name: ix_audit_log_user_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_log_user_timestamp ON public.audit_logs USING btree (user_id, "timestamp");
+
+
+--
+-- Name: ix_audit_logs_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_logs_timestamp ON public.audit_logs USING btree ("timestamp");
+
+
+--
+-- Name: ix_audit_trail_action; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trail_action ON public.audit_trails USING btree (action, "timestamp");
+
+
+--
+-- Name: ix_audit_trail_correlation; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trail_correlation ON public.audit_trails USING btree (correlation_id);
+
+
+--
+-- Name: ix_audit_trail_org_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trail_org_timestamp ON public.audit_trails USING btree (organization_id, "timestamp");
+
+
+--
+-- Name: ix_audit_trail_resource; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trail_resource ON public.audit_trails USING btree (resource_type, resource_id);
+
+
+--
+-- Name: ix_audit_trail_user_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trail_user_timestamp ON public.audit_trails USING btree (user_id, "timestamp");
+
+
+--
+-- Name: ix_audit_trails_correlation_id; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trails_correlation_id ON public.audit_trails USING btree (correlation_id);
+
+
+--
+-- Name: ix_audit_trails_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_audit_trails_timestamp ON public.audit_trails USING btree ("timestamp");
+
+
+--
+-- Name: ix_document_created; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_document_created ON public.documents USING btree (created_at);
+
+
+--
+-- Name: ix_document_org_movement; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_document_org_movement ON public.documents USING btree (organization_id, waste_movement_id);
+
+
+--
+-- Name: ix_document_org_status; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_document_org_status ON public.documents USING btree (organization_id, status);
+
+
+--
+-- Name: ix_employer_org_status; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_employer_org_status ON public.employers USING btree (organization_id, status);
+
+
+--
+-- Name: ix_employers_archived_at; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_employers_archived_at ON public.employers USING btree (archived_at);
+
+
+--
+-- Name: ix_legal_alert_org_status; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_legal_alert_org_status ON public.legal_alerts USING btree (organization_id, status);
+
+
+--
+-- Name: ix_legal_alert_severity; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_legal_alert_severity ON public.legal_alerts USING btree (severity);
+
+
+--
+-- Name: ix_link_org; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_link_org ON public.employer_transporter_links USING btree (organization_id);
+
+
+--
+-- Name: ix_residue_org_employer; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_residue_org_employer ON public.residues USING btree (organization_id, employer_id);
+
+
+--
+-- Name: ix_residue_org_status; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_residue_org_status ON public.residues USING btree (organization_id, status);
+
+
+--
+-- Name: ix_review_action_document; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_review_action_document ON public.review_actions USING btree (document_id);
+
+
+--
+-- Name: ix_review_action_org; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_review_action_org ON public.review_actions USING btree (organization_id);
+
+
+--
+-- Name: ix_review_action_user; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_review_action_user ON public.review_actions USING btree (user_id);
+
+
+--
+-- Name: ix_subscription_status; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_subscription_status ON public.subscriptions USING btree (status);
+
+
+--
+-- Name: ix_transporter_org_status; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_transporter_org_status ON public.transporters USING btree (organization_id, status);
+
+
+--
+-- Name: ix_transporters_archived_at; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_transporters_archived_at ON public.transporters USING btree (archived_at);
+
+
+--
+-- Name: ix_usage_cycle_month; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_usage_cycle_month ON public.usage_cycles USING btree (month_year);
+
+
+--
+-- Name: ix_users_email; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE UNIQUE INDEX ix_users_email ON public.users USING btree (email);
+
+
+--
+-- Name: ix_waste_movement_manifest; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_waste_movement_manifest ON public.waste_movements USING btree (manifest_number);
+
+
+--
+-- Name: ix_waste_movement_org_timestamp; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_waste_movement_org_timestamp ON public.waste_movements USING btree (organization_id, created_at);
+
+
+--
+-- Name: ix_webhook_event_stripe_customer; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_webhook_event_stripe_customer ON public.webhook_events USING btree (stripe_customer_id);
+
+
+--
+-- Name: ix_webhook_events_event_id; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_webhook_events_event_id ON public.webhook_events USING btree (event_id);
+
+
+--
+-- Name: ix_webhook_events_stripe_customer_id; Type: INDEX; Schema: public; Owner: pranely
+--
+
+CREATE INDEX ix_webhook_events_stripe_customer_id ON public.webhook_events USING btree (stripe_customer_id);
+
+
+--
+-- Name: audit_logs audit_logs_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.audit_logs
+    ADD CONSTRAINT audit_logs_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: documents documents_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT documents_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: documents documents_waste_movement_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.documents
+    ADD CONSTRAINT documents_waste_movement_id_fkey FOREIGN KEY (waste_movement_id) REFERENCES public.waste_movements(id);
+
+
+--
+-- Name: employer_transporter_links employer_transporter_links_employer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employer_transporter_links
+    ADD CONSTRAINT employer_transporter_links_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.employers(id);
+
+
+--
+-- Name: employer_transporter_links employer_transporter_links_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employer_transporter_links
+    ADD CONSTRAINT employer_transporter_links_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: employer_transporter_links employer_transporter_links_transporter_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employer_transporter_links
+    ADD CONSTRAINT employer_transporter_links_transporter_id_fkey FOREIGN KEY (transporter_id) REFERENCES public.transporters(id);
+
+
+--
+-- Name: employers employers_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.employers
+    ADD CONSTRAINT employers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: legal_alerts legal_alerts_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.legal_alerts
+    ADD CONSTRAINT legal_alerts_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: memberships memberships_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT memberships_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: memberships memberships_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.memberships
+    ADD CONSTRAINT memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: residues residues_employer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.residues
+    ADD CONSTRAINT residues_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.employers(id);
+
+
+--
+-- Name: residues residues_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.residues
+    ADD CONSTRAINT residues_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: residues residues_transporter_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.residues
+    ADD CONSTRAINT residues_transporter_id_fkey FOREIGN KEY (transporter_id) REFERENCES public.transporters(id);
+
+
+--
+-- Name: review_actions review_actions_document_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.review_actions
+    ADD CONSTRAINT review_actions_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id);
+
+
+--
+-- Name: review_actions review_actions_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.review_actions
+    ADD CONSTRAINT review_actions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: subscriptions subscriptions_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: subscriptions subscriptions_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.billing_plans(id);
+
+
+--
+-- Name: transporters transporters_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.transporters
+    ADD CONSTRAINT transporters_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- Name: usage_cycles usage_cycles_subscription_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.usage_cycles
+    ADD CONSTRAINT usage_cycles_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES public.subscriptions(id);
+
+
+--
+-- Name: waste_movements waste_movements_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pranely
+--
+
+ALTER TABLE ONLY public.waste_movements
+    ADD CONSTRAINT waste_movements_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict P8uq2JdhfFNG5wa4bZUXi4Hskt1sSbcjxkvySkamwluNTV5XnQin9DVkJ2JUv5N
+
+--
+-- PostgreSQL database cluster dump complete
+--
+

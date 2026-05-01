@@ -7,6 +7,7 @@ from typing import Any, Callable, Optional
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
+import redis as sync_redis  # Sync redis for RQ
 import redis.asyncio as redis
 from redis.asyncio.retry import Retry
 from redis.exceptions import (
@@ -241,3 +242,23 @@ redis_client = RedisClient()
 async def get_redis() -> RedisClient:
     """Dependency to get Redis client."""
     return redis_client
+
+# Sync Redis client for RQ (RQ uses sync redis)
+_redis_sync_client = None
+
+def get_redis_sync():
+    """
+    Get synchronous Redis client for RQ.
+    
+    FASE 2.2 FIX 1: Required by RQ which uses sync Redis.
+    """
+    global _redis_sync_client
+    
+    if _redis_sync_client is None:
+        settings = get_settings()
+        _redis_sync_client = sync_redis.from_url(
+            settings.REDIS_URL,
+            decode_responses=False,
+        )
+    
+    return _redis_sync_client

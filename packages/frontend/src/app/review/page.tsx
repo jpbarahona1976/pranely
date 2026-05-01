@@ -445,12 +445,10 @@ function ReviewContent() {
   );
 }
 
-export function ReviewPage() {
+export default function ReviewPage() {
   return (
     <ProtectedRoute fallbackPath="/login">
       <ReviewContent />
     </ProtectedRoute>
   );
 }
-
-export default ReviewPage;

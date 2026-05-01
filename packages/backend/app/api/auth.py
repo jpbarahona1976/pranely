@@ -1,5 +1,6 @@
-"""Authentication API endpoints: register and login."""
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Authentication API endpoints: register, login, and org selection."""
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +17,8 @@ from app.schemas.auth import (
     TokenResponse,
     UserResponse,
     OrganizationResponse,
+    OrganizationOption,
+    OrganizationListResponse,
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -87,13 +90,25 @@ async def register(
     "/login",
     response_model=AuthResponse,
     summary="Login user",
-    description="Authenticate user and return JWT token with org context.",
+    description="Authenticate user and return JWT token with org context. "
+                "For multi-org users, use ?org_id=X to select specific organization.",
 )
 async def login(
     request: LoginRequest,
     db: AsyncSession = Depends(get_db),
+    org_id: Optional[int] = Query(
+        None,
+        description="Organization ID for multi-org users. "
+                    "If omitted and user has multiple orgs, returns list of memberships.",
+    ),
 ) -> AuthResponse:
-    """Login user and return authentication token with org_id, role, and permissions."""
+    """
+    Login user with optional organization selection.
+    
+    - If user has ONE organization: returns token for that org
+    - If user has MULTIPLE organizations and org_id is provided: returns token for selected org
+    - If user has MULTIPLE organizations and org_id NOT provided: returns available orgs list
+    """
     # Find user by email
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
@@ -132,46 +147,100 @@ async def login(
             },
         )
     
-    # Get user's primary organization (first membership)
+    # Get all user's active memberships with organization details
     result = await db.execute(
-        select(Membership)
+        select(Membership, Organization)
+        .join(Organization, Membership.organization_id == Organization.id)
         .where(Membership.user_id == user.id)
+        .where(Organization.is_active == True)
         .order_by(Membership.created_at)
-        .limit(1)
     )
-    membership = result.scalar_one_or_none()
+    memberships_with_orgs = result.all()
     
-    # Get org details
-    org = None
-    org_id = None
-    role = None
-    permissions = []
+    if not memberships_with_orgs:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "type": "https://api.pranely.com/errors/auth",
+                "title": "No active organization",
+                "status": 403,
+                "detail": "User has no active organization memberships",
+            },
+        )
     
-    if membership:
-        org_id = membership.organization_id
+    # Single org case: use it automatically (backward compatible)
+    if len(memberships_with_orgs) == 1:
+        membership, org = memberships_with_orgs[0]
+        org_id = org.id
         role = membership.role.value if membership.role else UserRole.MEMBER.value
         permissions = get_permissions_for_role(role)
         
-        # Get organization details
-        result = await db.execute(
-            select(Organization).where(Organization.id == org_id)
+        access_token = create_access_token(
+            user_id=user.id,
+            org_id=org_id,
+            role=role,
+            permissions=permissions,
         )
-        org = result.scalar_one_or_none()
+        
+        return AuthResponse(
+            token=TokenResponse(
+                access_token=access_token,
+                token_type="bearer",
+                expires_in=86400,
+            ),
+            user=UserResponse.model_validate(user),
+            organization=OrganizationResponse.model_validate(org),
+        )
     
-    # Create access token with enhanced claims (org_id, role, permissions)
-    access_token = create_access_token(
-        user_id=user.id,
-        org_id=org_id,
-        role=role,
-        permissions=permissions,
-    )
+    # Multi-org case: determine org_id to use
+    if org_id is not None:
+        # Validate user is member of requested org
+        found = False
+        for membership, org in memberships_with_orgs:
+            if org.id == org_id:
+                role = membership.role.value if membership.role else UserRole.MEMBER.value
+                permissions = get_permissions_for_role(role)
+                
+                access_token = create_access_token(
+                    user_id=user.id,
+                    org_id=org_id,
+                    role=role,
+                    permissions=permissions,
+                )
+                
+                return AuthResponse(
+                    token=TokenResponse(
+                        access_token=access_token,
+                        token_type="bearer",
+                        expires_in=86400,
+                    ),
+                    user=UserResponse.model_validate(user),
+                    organization=OrganizationResponse.model_validate(org),
+                )
+        
+        # User is not member of requested org
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "type": "https://api.pranely.com/errors/auth",
+                "title": "Invalid organization",
+                "status": 403,
+                "detail": f"User is not a member of organization {org_id}",
+            },
+        )
     
-    return AuthResponse(
-        token=TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=86400,
-        ),
+    # Multi-org without org_id: return list for user to choose
+    available_orgs = [
+        OrganizationOption(
+            org_id=org.id,
+            org_name=org.name,
+            role=membership.role.value if membership.role else UserRole.MEMBER.value,
+        )
+        for membership, org in memberships_with_orgs
+    ]
+    
+    return OrganizationListResponse(
         user=UserResponse.model_validate(user),
-        organization=OrganizationResponse.model_validate(org) if org else None,
+        available_orgs=available_orgs,
+        message="Multiple organizations found. Please specify org_id in query param.",
     )

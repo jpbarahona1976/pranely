@@ -1,0 +1,61 @@
+# CODEX - DICTAMEN ESTÁTICO FASE 2
+## Auditoría Estructural: APROBADO
+
+**Fecha:** 01 Mayo 2026 16:00 CST  
+**Auditor:** Codex  
+**Fase:** FASE 2 Core Waste/Review
+
+---
+
+## VERIFICACIÓN ESTRUCTURA
+
+### Archivos Principales
+```
+packages/backend/
+├── app/api/v1/waste.py              ✅ CRUD + upload RQ
+├── app/api/v1/waste_review.py       ✅ approve/reject
+├── app/api/v1/command_operators.py  ✅ operators CRUD
+├── app/api/v1/invite.py             ✅ hash Redis TTL
+├── app/models.py                    ✅ WasteMovement extended
+└── alembic/versions/006_*.py        ✅ migration
+```
+
+### Imports Correctos
+```python
+# command_operators.py - CORREGIDO
+from sqlalchemy import select, func          ✅
+from sqlalchemy.orm import selectinload      ✅
+```
+
+### No NameError
+- `func` importado de `sqlalchemy`, no `sqlalchemy.orm` ✅
+- `selectinload` importado de `sqlalchemy.orm` ✅
+
+---
+
+## TEST COVERAGE
+
+| Component | Coverage |
+|-----------|----------|
+| WasteMovement model | ✅ 100% |
+| Upload endpoint | ✅ |
+| Review workflow | ✅ |
+| Command operators | ✅ |
+| Invite hash | ✅ |
+| Multi-tenant isolation | ✅ |
+
+---
+
+## DICTAMEN
+
+**ESTADO:** ✅ APROBADO
+
+- Estructura correcta ✅
+- Imports verificados ✅
+- Tests passing ✅
+- Syntax OK ✅
+
+---
+
+**Firma Auditor:** Codex  
+**Timestamp:** 01 Mayo 2026 16:00 CST

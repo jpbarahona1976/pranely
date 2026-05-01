@@ -198,11 +198,23 @@ class TestBridgeRBAC:
 class TestBridgeCleanup:
     """Tests para cleanup de sesiones expiradas."""
 
-    def test_get_bridge_stats(self):
+    @pytest.mark.asyncio
+    async def test_get_bridge_stats(self):
         """Test getting bridge statistics."""
+        import pytest
         from app.api.bridge import get_bridge_stats
+        from app.core.config import settings
         
-        stats = get_bridge_stats()
+        # Check if Redis is available, skip if not
+        try:
+            import redis.asyncio as redis
+            r = redis.from_url(settings.REDIS_URL)
+            await r.ping()
+            await r.close()
+        except Exception:
+            pytest.skip("Redis not available for this test")
+        
+        stats = await get_bridge_stats()
         
         assert "total_sessions" in stats
         assert "active_connections" in stats
@@ -265,13 +277,13 @@ class TestBridgeAPIIntegration:
 
     async def test_bridge_session_requires_auth(self, async_client):
         """Test that bridge session requires authentication."""
-        response = await async_client.post("/api/bridge/session")
+        response = await async_client.post("/bridge/session")
         
         assert response.status_code == 401
 
     async def test_bridge_session_status_requires_auth(self, async_client):
         """Test that bridge status requires authentication."""
-        response = await async_client.get("/api/bridge/session/TESTTOKEN")
+        response = await async_client.get("/bridge/session/TESTTOKEN")
         
         assert response.status_code == 401
 

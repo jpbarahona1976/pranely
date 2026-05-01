@@ -1,12 +1,20 @@
 /**
  * Dashboard 6B E2E Tests - Playwright
  * Pruebas para auditoría de hallazgos de Fase 6B
+ * 
+ * SECURITY: All test credentials MUST be provided via environment variables:
+ * - E2E_BASE_URL: Frontend base URL
+ * - E2E_API_URL: API base URL
+ * - E2E_TEST_EMAIL: Test user email
+ * - E2E_TEST_PASSWORD: Test user password
  */
 import { test, expect } from '@playwright/test';
 
-// Configuración
+// Configuración via env vars - no hardcoded fallbacks
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const API_URL = process.env.E2E_API_URL || 'http://localhost:8000';
+const TEST_EMAIL = process.env.E2E_TEST_EMAIL;
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD;
 
 test.describe('Dashboard 6B - Auditoría de Hallazgos', () => {
   
@@ -24,7 +32,7 @@ test.describe('Dashboard 6B - Auditoría de Hallazgos', () => {
     test('debe existir POST /api/v1/waste/{id}/review en backend', async ({ request }) => {
       // Login primero
       const loginResponse = await request.post(`${API_URL}/api/auth/login`, {
-        data: { email: 'test@pranely.com', password: 'testpassword123' }
+        data: { email: TEST_EMAIL, password: TEST_PASSWORD }
       });
       
       if (loginResponse.ok()) {

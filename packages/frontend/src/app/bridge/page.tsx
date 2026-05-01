@@ -20,6 +20,15 @@ import {
   type BridgeSession,
 } from "@/lib/bridge-api";
 
+// Register Service Worker on mount
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw-bridge.js").catch(() => {
+      // SW registration optional - ignore errors
+    });
+  });
+}
+
 type ViewMode = "idle" | "scan" | "manual" | "connected";
 
 function BridgeContent() {
@@ -516,12 +525,10 @@ function BridgeContent() {
   );
 }
 
-export function BridgePage() {
+export default function BridgePage() {
   return (
     <ProtectedRoute fallbackPath="/login">
       <BridgeContent />
     </ProtectedRoute>
   );
 }
-
-export default BridgePage;

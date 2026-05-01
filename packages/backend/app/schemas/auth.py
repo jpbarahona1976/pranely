@@ -55,11 +55,29 @@ class TokenResponse(BaseModel):
     expires_in: int = 86400  # 24 hours in seconds
 
 
+class OrganizationOption(BaseModel):
+    """Available organization for multi-org users."""
+    org_id: int
+    org_name: str
+    role: str
+
+
 class AuthResponse(BaseModel):
     """Schema for complete auth response (token + user + org)."""
-    token: TokenResponse
+    token: Optional[TokenResponse] = None
     user: UserResponse
-    organization: OrganizationResponse
+    organization: Optional[OrganizationResponse] = None
+    available_orgs: Optional[list[OrganizationOption]] = None
+    message: Optional[str] = None
+
+
+class OrganizationListResponse(BaseModel):
+    """Response when user has multiple orgs without org_id selection."""
+    user: UserResponse
+    available_orgs: list[OrganizationOption]
+    message: str
+    token: None = None  # Explicitly None
+    organization: None = None  # Explicitly None
 
 
 class RegisterResponse(BaseModel):

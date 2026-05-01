@@ -1,0 +1,15 @@
+# Grafana Dashboard Provisioning
+# FASE 9B: Observability
+apiVersion: 1
+
+providers:
+  - name: 'PRANELY'
+    orgId: 1
+    folder: 'PRANELY'
+    folderUid: 'pranely'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

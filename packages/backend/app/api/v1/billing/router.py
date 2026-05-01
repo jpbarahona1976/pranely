@@ -10,7 +10,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.models import BillingPlan, BillingPlanCode, Organization, Subscription, SubscriptionStatus
+from app.models import (
+    BillingPlan,
+    BillingPlanCode,
+    Membership,
+    Organization,
+    Subscription,
+    SubscriptionStatus,
+    UserRole,
+)
 from app.api.v1.deps import get_current_user_with_org
 
 
@@ -20,7 +28,87 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/billing", tags=["Billing"])
 
 
-# --- Schemas ---
+# =============================================================================
+# RBAC: Only Owner can initiate checkout/payment
+# FASE 8C.2 FIX: Hardened with double-check and tenant validation
+# =============================================================================
+async def require_owner_role(user_org: tuple) -> tuple:
+    """
+    Validate that the current user has Owner role.
+    Raises 403 if not Owner.
+    
+    RBAC rule:
+    - Owner: full pay access ✓
+    - Admin: view limited (NO mutation) ✗
+    - Member: cannot mutate billing ✗
+    - Viewer: cannot mutate ✗
+    
+    FASE 8C.2 FIX: Added tenant validation to prevent bypass attempts.
+    """
+    user, org_id = user_org
+    
+    # FASE 8C.2 FIX: Validate org_id is not None or suspicious
+    if org_id is None or org_id <= 0:
+        logger.warning(
+            f"Suspicious billing access attempt: user_id={user.id}, "
+            f"org_id={org_id}, action='require_owner_role'"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "type": "https://api.pranely.com/errors/authz",
+                "title": "Invalid tenant context",
+                "status": 403,
+                "detail": "Invalid organization context",
+            },
+        )
+    
+    async with get_db() as db:
+        # Double-check: verify membership exists and role matches token
+        result = await db.execute(
+            select(Membership).where(
+                Membership.user_id == user.id,
+                Membership.organization_id == org_id,
+            )
+        )
+        membership = result.scalar_one_or_none()
+        
+        if membership is None:
+            logger.warning(
+                f"Bypass attempt detected: user_id={user.id}, "
+                f"org_id={org_id}, role_missing=True"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "type": "https://api.pranely.com/errors/authz",
+                    "title": "Forbidden",
+                    "status": 403,
+                    "detail": "User is not a member of this organization",
+                },
+            )
+        
+        if membership.role != UserRole.OWNER:
+            logger.warning(
+                f"RBAC violation: user_id={user.id}, org_id={org_id}, "
+                f"role={membership.role.value}, action='billing.mutation'"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "type": "https://api.pranely.com/errors/billing",
+                    "title": "Forbidden",
+                    "status": 403,
+                    "detail": "Only organization Owner can manage billing",
+                },
+            )
+    
+    return user_org  # Return the same tuple if validation passes
+
+
+# =============================================================================
+# Schemas
+# =============================================================================
 
 class BillingPlanResponse(BaseModel):
     """Schema for billing plan response."""
@@ -70,6 +158,7 @@ class SubscriptionDetailResponse(BaseModel):
     stripe_customer_id: Optional[str] = None
     doc_limit: int
     docs_used: int = 0
+    is_locked: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -87,13 +176,15 @@ class CheckoutResponse(BaseModel):
     plan_code: str
 
 
-# --- Endpoints ---
+# =============================================================================
+# Endpoints
+# =============================================================================
 
 @router.get(
     "/plans",
     response_model=BillingPlanListResponse,
     summary="List billing plans",
-    description="List all available billing plans.",
+    description="List all available billing plans. Public endpoint.",
 )
 async def list_plans(
     db: AsyncSession = Depends(get_db),
@@ -102,6 +193,7 @@ async def list_plans(
     List all active billing plans.
     
     Returns plans available for subscription.
+    No authentication required (public endpoint).
     """
     result = await db.execute(
         select(BillingPlan)
@@ -139,9 +231,10 @@ async def get_subscription(
     user_org: tuple = Depends(get_current_user_with_org),
 ) -> SubscriptionDetailResponse:
     """
-    Get current organization subscription.
+    Get current organization subscription with usage details.
     
-    Requires authentication and returns subscription details with usage.
+    Requires authentication.
+    Multi-tenant: Returns only the org's own subscription.
     """
     user, org_id = user_org
     
@@ -167,6 +260,7 @@ async def get_subscription(
             stripe_customer_id=None,
             doc_limit=0,
             docs_used=0,
+            is_locked=False,
         )
     
     # Get plan details
@@ -184,7 +278,7 @@ async def get_subscription(
     # Get current usage (from UsageCycle)
     from app.models import UsageCycle
     
-    current_month = datetime.now().strftime("%Y-%m")
+    current_month = datetime.utcnow().strftime("%Y-%m")
     result = await db.execute(
         select(UsageCycle)
         .where(
@@ -207,6 +301,7 @@ async def get_subscription(
         stripe_customer_id=subscription.stripe_customer_id or org.stripe_customer_id if org else None,
         doc_limit=plan.doc_limit if plan else 0,
         docs_used=usage.docs_used if usage else 0,
+        is_locked=usage.is_locked if usage else False,
     )
 
 
@@ -215,7 +310,7 @@ async def get_subscription(
     response_model=CheckoutResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Subscribe to plan",
-    description="Create Stripe checkout session for subscription.",
+    description="Create Stripe checkout session for subscription. Owner only.",
 )
 async def subscribe(
     plan_code: str,
@@ -227,9 +322,13 @@ async def subscribe(
     Create Stripe checkout session for plan subscription.
     
     Returns Stripe checkout URL for payment processing.
-    Note: Stripe integration is stubbed for MVP - returns mock URL.
+    RBAC: Only Owner can initiate checkout.
+    
+    Audit: Registers billing.checkout.start action.
     """
+    # Validate Owner role
     user, org_id = user_org
+    await require_owner_role(user_org)
     
     # Validate plan_code
     try:
@@ -279,23 +378,55 @@ async def subscribe(
             },
         )
     
+    # Log audit event (async, non-blocking)
+    from app.core.audit import log_audit_event
+    log_audit_event(
+        organization_id=org_id,
+        user_id=user.id,
+        action="billing.checkout.start",
+        resource_type="subscription",
+        resource_id=plan_code,
+        result="success",
+        payload={"plan_code": plan_code, "plan_name": plan.name},
+    )
+    
+    # Check if Stripe is configured
+    if not settings.STRIPE_SECRET_KEY:
+        logger.warning(f"Stripe not configured, returning mock checkout for org={org_id}")
+        
+        # In dev without Stripe, return a mock response
+        # This allows testing the flow without real Stripe credentials
+        return CheckoutResponse(
+            checkout_url=f"{settings.FRONTEND_URL}/billing?mock=checkout&plan={plan_code}",
+            session_id=f"mock_session_{org_id}_{plan_code}",
+            plan_code=plan_code,
+        )
+    
     # REAL: Create Stripe Checkout Session
     import stripe
-    
-    if not settings.STRIPE_SECRET_KEY:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "type": "https://api.pranely.com/errors/billing",
-                "title": "Stripe not configured",
-                "status": 500,
-                "detail": "STRIPE_SECRET_KEY not configured",
-            },
-        )
     
     stripe.api_key = settings.STRIPE_SECRET_KEY
     
     try:
+        # Prepare metadata for webhook reconciliation
+        metadata = {
+            "org_id": str(org_id),
+            "plan_code": plan_code,
+            "initiated_by_user_id": str(user.id),
+        }
+        
+        # Create or get Stripe customer
+        if org.stripe_customer_id:
+            customer_id = org.stripe_customer_id
+        else:
+            # Create new customer
+            customer = stripe.Customer.create(
+                email=user.email,
+                metadata={"org_id": str(org_id), "org_name": org.name},
+            )
+            customer_id = customer.id
+            org.stripe_customer_id = customer_id
+        
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -307,12 +438,20 @@ async def subscribe(
                 'quantity': 1,
             }],
             mode='subscription',
-            success_url=settings.FRONTEND_URL + '/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=settings.FRONTEND_URL + '/billing',
-            metadata={'org_id': str(org_id), 'plan_code': plan_code},
+            success_url=request.success_url + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=request.cancel_url,
+            customer=customer_id,
+            metadata=metadata,
         )
+        
         session_id = session.id
         checkout_url = session.url
+        
+        logger.info(
+            f"Stripe checkout created: org={org_id}, plan={plan_code}, "
+            f"session_id={session_id}"
+        )
+        
     except Exception as e:
         logger.error(f"Stripe checkout session creation failed: {e}")
         raise HTTPException(
@@ -330,6 +469,155 @@ async def subscribe(
         session_id=session_id,
         plan_code=plan_code,
     )
+
+
+@router.get(
+    "/usage",
+    summary="Get usage for current month",
+    description="Get document usage for the current billing cycle.",
+)
+async def get_usage(
+    db: AsyncSession = Depends(get_db),
+    user_org: tuple = Depends(get_current_user_with_org),
+) -> dict:
+    """
+    Get document usage for current billing cycle.
+    
+    Returns usage details including docs_used, docs_limit, and lock status.
+    """
+    user, org_id = user_org
+    
+    # Get subscription
+    result = await db.execute(
+        select(Subscription)
+        .where(Subscription.organization_id == org_id)
+    )
+    subscription = result.scalar_one_or_none()
+    
+    if subscription is None:
+        # Free tier - return default limits
+        return {
+            "month_year": datetime.utcnow().strftime("%Y-%m"),
+            "docs_used": 0,
+            "docs_limit": 100,  # Free plan limit
+            "is_locked": False,
+            "plan_code": "free",
+            "subscription_active": False,
+        }
+    
+    # Get plan
+    result = await db.execute(
+        select(BillingPlan).where(BillingPlan.id == subscription.plan_id)
+    )
+    plan = result.scalar_one_or_none()
+    
+    # Get current usage
+    from app.models import UsageCycle
+    
+    current_month = datetime.utcnow().strftime("%Y-%m")
+    result = await db.execute(
+        select(UsageCycle)
+        .where(
+            UsageCycle.subscription_id == subscription.id,
+            UsageCycle.month_year == current_month,
+        )
+    )
+    usage = result.scalar_one_or_none()
+    
+    return {
+        "month_year": current_month,
+        "docs_used": usage.docs_used if usage else 0,
+        "docs_limit": plan.doc_limit if plan else 0,
+        "is_locked": usage.is_locked if usage else False,
+        "plan_code": plan.code.value if plan else "unknown",
+        "subscription_active": subscription.status == SubscriptionStatus.ACTIVE,
+        "overage_docs": usage.overage_docs if usage else 0,
+        "overage_charged_cents": usage.overage_charged_cents if usage else 0,
+    }
+
+
+@router.get(
+    "/quota",
+    summary="Check quota availability",
+    description="Check if organization has available document quota. Returns 402 if locked.",
+)
+async def check_quota(
+    db: AsyncSession = Depends(get_db),
+    user_org: tuple = Depends(get_current_user_with_org),
+) -> dict:
+    """
+    Check if organization has quota available for document processing.
+    
+    Returns quota status. HTTP 402 (Payment Required) if quota is exhausted.
+    This endpoint is used before document uploads to prevent failed processing.
+    """
+    user, org_id = user_org
+    
+    # Get subscription
+    result = await db.execute(
+        select(Subscription)
+        .where(Subscription.organization_id == org_id)
+    )
+    subscription = result.scalar_one_or_none()
+    
+    # Get plan
+    plan = None
+    if subscription:
+        result = await db.execute(
+            select(BillingPlan).where(BillingPlan.id == subscription.plan_id)
+        )
+        plan = result.scalar_one_or_none()
+    
+    # Get current usage
+    from app.models import UsageCycle
+    
+    current_month = datetime.utcnow().strftime("%Y-%m")
+    usage = None
+    
+    if subscription:
+        result = await db.execute(
+            select(UsageCycle)
+            .where(
+                UsageCycle.subscription_id == subscription.id,
+                UsageCycle.month_year == current_month,
+            )
+        )
+        usage = result.scalar_one_or_none()
+    
+    # Calculate available
+    docs_limit = plan.doc_limit if plan else 100
+    docs_used = usage.docs_used if usage else 0
+    
+    # Check availability
+    available = docs_limit == 0 or docs_used < docs_limit
+    is_locked = usage.is_locked if usage else False
+    subscription_active = subscription is None or subscription.status == SubscriptionStatus.ACTIVE
+    
+    response = {
+        "available": available and subscription_active and not is_locked,
+        "docs_used": docs_used,
+        "docs_limit": docs_limit,
+        "is_locked": is_locked,
+        "plan_code": plan.code.value if plan else "free",
+        "subscription_active": subscription_active,
+        "message": "OK" if available and subscription_active else "Quota exhausted or subscription inactive",
+    }
+    
+    # Return 402 if not available
+    if not available or not subscription_active or is_locked:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "type": "https://api.pranely.com/errors/billing",
+                "title": "Quota exceeded",
+                "status": 402,
+                "detail": response["message"],
+                "used": docs_used,
+                "limit": docs_limit,
+            },
+        )
+    
+    return response
 
 
 # Import webhook router and include it

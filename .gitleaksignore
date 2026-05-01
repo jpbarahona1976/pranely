@@ -1,0 +1,37 @@
+# =============================================================================
+# PRANELY - Gitleaks Ignore Rules
+# Historical audit evidence - NOT actual secrets
+# =============================================================================
+
+# COMMIT_F0EF991.txt - Historical evidence dump (variables, not secrets)
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:927
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:1972
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2499
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2544
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2551
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2553
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2559
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2573
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2670
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2674
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2949
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:2959
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/COMMIT_F0EF991.txt:generic-password:3019
+
+# gitleaks-report.json - Historical scan results (placeholders)
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:connection-string:370
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:connection-string:419
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-database-url:345
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-database-url:370
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-database-url:394
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-database-url:419
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-redis-password:297
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-redis-password:298
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-redis-password:321
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-redis-password:322
+09aeebb77b6fd1611932e7652cd591efc8320f0c:audit-evidence/4C-Backup-DR/security/gitleaks-report.json:pranely-redis-password:419
+
+# run-dr-tests.ps1 - Historical hardcoded password (FIXED: now uses env var)
+09aeebb77b6fd1611932e7652cd591efc8320f0c:scripts/run-dr-tests.ps1:generic-password:122
+09aeebb77b6fd1611932e7652cd591efc8320f0c:scripts/run-dr-tests.ps1:generic-password:134
+09aeebb77b6fd1611932e7652cd591efc8320f0c:scripts/run-dr-tests.ps1:generic-password:156

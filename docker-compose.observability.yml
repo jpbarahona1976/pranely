@@ -1,0 +1,99 @@
+# PRANELY Observability Stack
+# FASE 9B: Prometheus + Grafana + Node Exporter
+version: '3.8'
+
+services:
+  # -----------------------------------------------------------------------------
+  # Prometheus - Metrics collection
+  # -----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: pranely-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./packages/backend/observability/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - pranely-observability
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # -----------------------------------------------------------------------------
+  # Grafana - Dashboards and visualization
+  # -----------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: pranely-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123  # Override via ENV in production!
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_LOG_LEVEL: info
+    volumes:
+      - ./packages/backend/observability/grafana/provisioning:/etc/grafana/provisioning
+      - ./packages/backend/observability/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    networks:
+      - pranely-observability
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # -----------------------------------------------------------------------------
+  # Node Exporter - Host metrics
+  # -----------------------------------------------------------------------------
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    container_name: pranely-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - pranely-observability
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  pranely-observability:
+    name: pranely-observability
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  prometheus_data:
+    name: pranely-prometheus-data
+  grafana_data:
+    name: pranely-grafana-data

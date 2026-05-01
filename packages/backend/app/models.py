@@ -4,7 +4,7 @@ from typing import List, Optional
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
-    Boolean, DateTime, Enum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint, Text
+    Boolean, DateTime, Enum, Float, ForeignKey, Index, Integer, JSON, String, UniqueConstraint, Text, text
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -20,11 +20,20 @@ class Base(DeclarativeBase):
 
 
 class UserRole(PyEnum):
-    """User roles within an organization."""
+    """User roles within an organization.
+    
+    RBAC hierarchy (least to most permission):
+    - viewer: read-only, no mutations
+    - member: read + basic operations (8B fix: GET allowed, mutations denied)
+    - admin: full ops access within tenant
+    - owner: tenant owner, can delete org
+    - director: platform-wide supervisor, full tenant access (8B fix: now included)
+    """
     OWNER = "owner"
     ADMIN = "admin"
     MEMBER = "member"
     VIEWER = "viewer"
+    DIRECTOR = "director"
 
 
 class EntityStatus(PyEnum):
@@ -170,6 +179,8 @@ class User(Base):
 class Membership(Base):
     """
     Link between User and Organization with a specific role.
+    
+    FASE 2.1 FIX 4: Added extra_data JSONB column for operator metadata.
     """
     __tablename__ = "memberships"
     __table_args__ = (
@@ -189,6 +200,8 @@ class Membership(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )
+    # FASE 2.1 FIX 4: JSONB for operator metadata
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="memberships")
@@ -750,6 +763,11 @@ class WasteMovement(Base):
     Waste movement/manifest entity for NOM-052 compliance.
     
     Tracks the physical movement of waste from generator to disposal.
+    Supports review workflow: approve/reject/request_changes.
+    
+    FASE 2 FIX 1: Extended with confidence, is_immutable, archived_at,
+    review metadata (reviewed_by, reviewed_at, rejection_reason),
+    created_by_user_id, file_hash, file_size_bytes.
     
     Multi-tenancy: organization_id REQUIRED.
     """
@@ -763,11 +781,27 @@ class WasteMovement(Base):
         Index("ix_waste_movement_org_timestamp", "organization_id", "created_at"),
         Index("ix_waste_movement_manifest", "manifest_number"),
         Index("ix_waste_movement_org_status", "organization_id", "status"),
+        # FASE 2 FIX 1: Index for AI triage (high confidence = auto-approve)
+        Index(
+            "ix_waste_movement_org_confidence",
+            "organization_id", "confidence_score",
+            postgresql_where=text("confidence_score IS NOT NULL")
+        ),
+        # Index for archived filter
+        Index(
+            "ix_waste_movement_org_archived",
+            "organization_id",
+            postgresql_where=text("archived_at IS NOT NULL")
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("organizations.id"), nullable=False
+    )
+    # Creator tracking for RBAC
+    created_by_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
     )
     # Manifest details
     manifest_number: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -779,20 +813,32 @@ class WasteMovement(Base):
     date: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    # AI Metadata
-    confidence_score: Mapped[Optional[float]] = mapped_column(nullable=True)
+    # FASE 2 FIX 1: AI Metadata - confidence score 0-1
+    confidence_score: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
     # Status
     status: Mapped[MovementStatus] = mapped_column(
         Enum(MovementStatus), default=MovementStatus.PENDING, nullable=False
     )
-    # Controls
+    # FASE 2 FIX 1: Controls - is_immutable locks validated movements
     is_immutable: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # FASE 2 FIX 1: Soft delete timestamp
     archived_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     # File storage
     file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     orig_filename: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # FASE 2 FIX 1: File integrity
+    file_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # SHA-256
+    file_size_bytes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # FASE 2 FIX 1: Review metadata
+    reviewed_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    rejection_reason: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
@@ -803,11 +849,15 @@ class WasteMovement(Base):
 
     # Relationships
     organization: Mapped["Organization"] = relationship("Organization", back_populates="movements")
+    creator: Mapped[Optional["User"]] = relationship("User", foreign_keys=[created_by_user_id])
 
     def __repr__(self) -> str:
         return f"<WasteMovement(id={self.id}, manifest='{self.manifest_number}', status={self.status.value})>"
 
 
+# ====
+# WebhookEvent Model (Idempotency for Stripe webhooks)
+# ====
 # =============================================================================
 # WebhookEvent Model (Idempotency for Stripe webhooks)
 # =============================================================================

@@ -448,12 +448,10 @@ function UploadContent() {
   );
 }
 
-export function UploadPage() {
+export default function UploadPage() {
   return (
     <ProtectedRoute fallbackPath="/login">
       <UploadContent />
     </ProtectedRoute>
   );
 }
-
-export default UploadPage;

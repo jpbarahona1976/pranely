@@ -1,0 +1,177 @@
+# PRANELY Prometheus Alert Rules
+# FASE 9B: Observability - Alertas mínimas operativas
+groups:
+  - name: pranely_api_alerts
+    interval: 30s
+    rules:
+      # =============================================================================
+      # API Availability / Uptime Alerts (SLO: 99.5% uptime)
+      # =============================================================================
+      - alert: PRANELYAPIDown
+        expr: up{job="pranely-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "PRANELY API is down"
+          description: "PRANELY backend API has been down for more than 1 minute."
+          runbook_url: "https://docs.pranely.com/runbooks/api-down"
+
+      # =============================================================================
+      # API Latency Alerts (SLO: p95 < 500ms)
+      # =============================================================================
+      - alert: PRANELYAPIHighLatency
+        expr: histogram_quantile(0.95, rate(pranely_http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "PRANELY API latency above 500ms (p95)"
+          description: "API p95 latency is {{ $value | printf \"%.3f\" }}s, exceeds 500ms threshold."
+
+      - alert: PRANELYAPICriticalLatency
+        expr: histogram_quantile(0.95, rate(pranely_http_request_duration_seconds_bucket[5m])) > 1.0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "PRANELY API latency above 1s (p95)"
+          description: "API p95 latency is {{ $value | printf \"%.3f\" }}s, critically high."
+
+      # =============================================================================
+      # Error Rate Alerts
+      # =============================================================================
+      - alert: PRANELYHighErrorRate
+        expr: |
+          sum(rate(pranely_http_requests_total{status_code=~"5.."}[5m])) 
+          / 
+          sum(rate(pranely_http_requests_total[5m])) > 0.01
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "PRANELY API error rate above 1%"
+          description: "API error rate is {{ $value | printf \"%.2f\" }}%"
+
+      - alert: PRANELYCriticalErrorRate
+        expr: |
+          sum(rate(pranely_http_requests_total{status_code=~"5.."}[5m])) 
+          / 
+          sum(rate(pranely_http_requests_total[5m])) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "PRANELY API error rate above 5%"
+          description: "API error rate is {{ $value | printf \"%.2f\" }}%, critical!"
+
+      # =============================================================================
+      # HTTP Status Code Alerts
+      # =============================================================================
+      - alert: PRANELYHigh4xxRate
+        expr: |
+          sum(rate(pranely_http_requests_total{status_code=~"4.."}[5m])) 
+          / 
+          sum(rate(pranely_http_requests_total[5m])) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High 4xx error rate"
+          description: "4xx rate is {{ $value | printf \"%.2f\" }}%"
+
+  - name: pranely_queue_alerts
+    interval: 30s
+    rules:
+      # =============================================================================
+      # Queue/Worker Alerts
+      # =============================================================================
+      - alert: PRANELYQueueBacklog
+        expr: pranely_rq_queue_size > 100
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "RQ queue has backlog"
+          description: "Queue {{ $labels.queue_name }} has {{ $value }} jobs pending"
+
+      - alert: PRANELYQueueCriticalBacklog
+        expr: pranely_rq_queue_size > 500
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "RQ queue critical backlog"
+          description: "Queue {{ $labels.queue_name }} has {{ $value }} jobs pending - investigate immediately"
+
+      - alert: PRANELYJobFailureRate
+        expr: |
+          sum(rate(pranely_rq_jobs_total{status="failed"}[1h])) 
+          / 
+          sum(rate(pranely_rq_jobs_total[1h])) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "RQ job failure rate above 5%"
+          description: "Job failure rate is {{ $value | printf \"%.2f\" }}%"
+
+  - name: pranely_rate_limit_alerts
+    interval: 30s
+    rules:
+      # =============================================================================
+      # Rate Limiting Alerts
+      # =============================================================================
+      - alert: PRANELYRateLimitHits
+        expr: increase(pranely_rate_limit_hits_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High rate limit hits"
+          description: "Organization {{ $labels.org_id }} hit rate limits {{ $value }} times in 5 minutes"
+
+  - name: pranely_infrastructure_alerts
+    interval: 30s
+    rules:
+      # =============================================================================
+      # Health Check Alerts
+      # =============================================================================
+      - alert: PRANELYHealthCheckUnhealthy
+        expr: pranely_health_check_status == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "PRANELY health check unhealthy"
+          description: "Component {{ $labels.component }} is unhealthy"
+
+      # =============================================================================
+      # SLO Burn Rate Alerts (multi-window)
+      # =============================================================================
+      - alert: PRANELYSLOBurnRateFast
+        expr: |
+          (
+            sum(rate(pranely_http_requests_total{status_code=~"5.."}[1h])) 
+            / 
+            sum(rate(pranely_http_requests_total[1h]))
+          ) > 0.001 * 14.4
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+          slo: availability-99.5
+        annotations:
+          summary: "SLO burn rate fast (1h window)"
+          description: "Error budget burning fast. 1h burn rate is {{ $value | printf \"%.1f\" }}x"

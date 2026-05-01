@@ -1,10 +1,21 @@
 /**
  * PRANELY - Auth Smoke Tests (Playwright)
  * 5 E2E smoke tests para validar flujo de autenticación
+ * 
+ * SECURITY: All test credentials MUST be provided via environment variables:
+ * - E2E_API_URL: API base URL
+ * - E2E_TEST_PASSWORD: Test user password
+ * - E2E_ALT_PASSWORD: Alternative test password  
+ * - E2E_WRONG_PASSWORD: Wrong password for negative tests
  */
 import { test, expect } from '@playwright/test';
 
 const API_URL = process.env.E2E_API_URL || 'http://localhost:8000';
+
+// Credentials MUST be provided via env vars - no hardcoded fallbacks
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD;
+const ALT_PASSWORD = process.env.E2E_ALT_PASSWORD;
+const WRONG_PASSWORD = process.env.E2E_WRONG_PASSWORD;
 
 test.describe('Auth Smoke Tests', () => {
   
@@ -17,7 +28,7 @@ test.describe('Auth Smoke Tests', () => {
     const timestamp = Date.now();
     const testUser = {
       email: `smoke_test_${timestamp}@example.com`,
-      password: 'SecurePass123!',
+      password: TEST_PASSWORD,
       full_name: 'Smoke Test User',
       organization_name: `Smoke Test Org ${timestamp}`,
     };
@@ -41,12 +52,12 @@ test.describe('Auth Smoke Tests', () => {
     const timestamp = Date.now();
     const testUser = {
       email: `login_test_${timestamp}@example.com`,
-      password: 'SecurePass123!',
+      password: TEST_PASSWORD,
       full_name: 'Login Test User',
       organization_name: `Login Test Org ${timestamp}`,
     };
 
-    // Registrar
+    // registrar
     await request.post(`${API_URL}/api/auth/register`, {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify(testUser),
@@ -77,7 +88,7 @@ test.describe('Auth Smoke Tests', () => {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
         email: 'nonexistent_user_pranely@example.com',
-        password: 'WrongPassword123!',
+        password: WRONG_PASSWORD,
       }),
     });
 
@@ -98,7 +109,7 @@ test.describe('Auth Smoke Tests', () => {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
         email: testEmail,
-        password: 'SecurePass123!',
+        password: TEST_PASSWORD,
         full_name: 'First User',
         organization_name: `First Org ${timestamp}`,
       }),
@@ -109,7 +120,7 @@ test.describe('Auth Smoke Tests', () => {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
         email: testEmail,
-        password: 'AnotherPass456!',
+        password: ALT_PASSWORD,
         full_name: 'Second User',
         organization_name: `Second Org ${timestamp}`,
       }),
@@ -128,7 +139,7 @@ test.describe('Auth Smoke Tests', () => {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
         email: 'not-a-valid-email',
-        password: 'SecurePass123!',
+        password: TEST_PASSWORD,
         full_name: 'Test User',
         organization_name: 'Test Org',
       }),

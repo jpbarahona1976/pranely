@@ -1,5 +1,5 @@
 // 8A MOBILE BRIDGE - Service Worker
-// Basic offline support for bridge shell and local queue
+// Basic offline support for bridge shell, local queue, and jsqr library
 
 const CACHE_NAME = 'pranely-bridge-v1';
 const OFFLINE_URL = '/bridge';
@@ -9,6 +9,8 @@ const STATIC_ASSETS = [
   '/',
   '/bridge',
   '/manifest.json',
+  // Cache jsqr library chunks for offline QR scanning
+  '/_next/static/chunks/main-app.js',
 ];
 
 // Install event - cache static assets
@@ -16,6 +18,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
+    }).catch(() => {
+      // Ignore cache errors during install
     })
   );
   // Activate immediately

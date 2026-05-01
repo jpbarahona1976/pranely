@@ -79,6 +79,59 @@ async def app_client(client: AsyncClient) -> AsyncGenerator[AsyncClient, None]:
 
 
 # =============================================================================
+# Billing Plans Fixture (FASE 8C.1)
+# =============================================================================
+@pytest_asyncio.fixture
+async def billing_plans(db_session) -> list:
+    """
+    Create default billing plans for testing.
+    
+    FASE 8C.1 FIX: Añadido para tests de quota/billing.
+    """
+    from app.models import BillingPlan, BillingPlanCode
+    
+    plans = [
+        BillingPlan(
+            code=BillingPlanCode.FREE,
+            name="Free Plan",
+            description="Free tier with basic features",
+            price_usd_cents=0,
+            doc_limit=10,  # Small limit for testing quota
+            doc_limit_period="monthly",
+            features_json={"basic": True},
+            is_active=True,
+        ),
+        BillingPlan(
+            code=BillingPlanCode.PRO,
+            name="Pro Plan",
+            description="Professional tier with advanced features",
+            price_usd_cents=2999,
+            doc_limit=100,
+            doc_limit_period="monthly",
+            features_json={"basic": True, "advanced": True},
+            is_active=True,
+        ),
+        BillingPlan(
+            code=BillingPlanCode.ENTERPRISE,
+            name="Enterprise Plan",
+            description="Enterprise tier with all features",
+            price_usd_cents=9999,
+            doc_limit=0,  # Unlimited
+            doc_limit_period="monthly",
+            features_json={"basic": True, "advanced": True, "enterprise": True},
+            is_active=True,
+        ),
+    ]
+    
+    for plan in plans:
+        db_session.add(plan)
+    
+    await db_session.commit()
+    
+    return plans
+
+
+# =============================================================================
 # Table Cleanup Fixture (IntegrityError Fix)
 # =============================================================================
 # Tables that need to be truncated between tests to avoid duplicate key errors
@@ -86,12 +139,15 @@ CRITICAL_TABLES = [
     "users",
     "organizations",
     "memberships",
+    "billing_plans",          # FASE 8C: Billing plans
+    "subscriptions",          # FASE 8C: Subscriptions
+    "usage_cycles",           # FASE 8C: Usage tracking
     "employers",
     "transporters",
     "residues",
     "employer_transporter_links",
     "audit_trails",
-    "waste_movements",  # FASE 5B: Waste movements table
+    "waste_movements",        # FASE 5B: Waste movements table
 ]
 
 
@@ -109,13 +165,16 @@ async def truncate_tables(db_session: AsyncSession):
     # Order matters: tables with FK references should be truncated after their parents
     truncate_order = [
         "audit_trails",                    # Depends on users, organizations
-        "waste_movements",                  # FASE 5B: Depends on organizations
+        "waste_movements",                 # FASE 5B: Depends on organizations
+        "usage_cycles",                    # FASE 8C: Depends on subscriptions
+        "subscriptions",                  # FASE 8C: Depends on organizations
         "employer_transporter_links",      # Depends on employers, transporters, organizations
-        "residues",                         # Depends on employers, transporters, organizations
-        "memberships",                      # Depends on users, organizations
-        "employers",                        # Depends on organizations
-        "transporters",                     # Depends on organizations
-        "users",                            # No dependencies
+        "residues",                        # Depends on employers, transporters, organizations
+        "memberships",                     # Depends on users, organizations
+        "billing_plans",                   # FASE 8C: Independent
+        "employers",                       # Depends on organizations
+        "transporters",                    # Depends on organizations
+        "users",                           # No dependencies
         "organizations",                   # No dependencies
     ]
     
